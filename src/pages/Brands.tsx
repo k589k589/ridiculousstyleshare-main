@@ -1,0 +1,97 @@
+import { Card, CardContent } from "@/components/ui/card";
+import { useLanguage } from "@/hooks/useLanguage";
+import brandsShowcase from "@/assets/brands-showcase.jpg";
+import { Sparkles } from "lucide-react";
+
+const Brands = () => {
+  const { t } = useLanguage();
+
+  // Brand logos data
+  const brands = [
+    { name: "Playboy", featured: true },
+    { name: "Gucci", featured: true },
+    { name: "Prada", featured: true },
+    { name: "Louis Vuitton", featured: true },
+    { name: "Chanel", featured: true },
+    { name: "Dior", featured: true },
+  ];
+
+  return (
+    <div className="min-h-screen bg-black">
+      <div className="container mx-auto px-4 py-16">
+        {/* Hero Section */}
+        <div className="text-center mb-16">
+          <div className="inline-block relative mb-6">
+            <h1 className="font-playfair text-5xl md:text-7xl font-bold text-white mb-4">
+              {t('brands.title')}
+            </h1>
+            <div className="absolute -inset-6 bg-gradient-to-r from-[#FF6600]/20 to-[#FF6600]/10 blur-2xl rounded-full"></div>
+          </div>
+          <p className="text-xl md:text-2xl text-white/70 max-w-3xl mx-auto leading-relaxed">
+            {t('brands.subtitle')}
+          </p>
+        </div>
+
+        {/* Brands Showcase Image with Blur */}
+        <div className="relative mb-12">
+          <Card className="overflow-hidden shadow-2xl bg-black/50 border-[#FF6600]/30">
+            <div className="relative aspect-video">
+              <img 
+                src={brandsShowcase} 
+                alt="Luxury Fashion Brands" 
+                className="w-full h-full object-cover blur-md"
+              />
+              <div className="absolute inset-0 bg-black/60"></div>
+              
+              {/* Coming Soon Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center space-y-6 z-10">
+                  <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-[#FF6600]/20 backdrop-blur-sm mb-4 border-2 border-[#FF6600]/50">
+                    <Sparkles className="w-12 h-12 text-[#FF6600] animate-pulse" />
+                  </div>
+                  <h2 className="text-5xl md:text-7xl font-playfair font-bold text-white">
+                    Coming Soon
+                  </h2>
+                  <div className="h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-[#FF6600] to-transparent"></div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Brand Tags with Blur */}
+        <div className="relative">
+          <Card className="bg-black/80 border-[#FF6600]/30 backdrop-blur-sm">
+            <CardContent className="p-16 text-center">
+              <div className="max-w-2xl mx-auto space-y-8">
+                <div className="space-y-4 text-white/70">
+                  <p className="text-xl">
+                    {t('brands.comingSoonDesc')}
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-3 mt-8 blur-sm">
+                    {brands.map((brand, index) => (
+                      <div 
+                        key={index}
+                        className="px-6 py-3 bg-white/10 rounded-full border border-[#FF6600]/30 backdrop-blur-sm"
+                      >
+                        <span className="font-medium text-white">{brand.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center gap-2 mt-12">
+                  <div className="w-2 h-2 bg-[#FF6600] rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-[#FF6600] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-[#FF6600] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Brands;

@@ -1,0 +1,230 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Fashion-forward color scheme - Hermès Orange & Black */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 8%;
+
+    /* Hermès Orange as primary */
+    --primary: 18 100% 60%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Luxury black secondary */
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    /* Subtle accent */
+    --accent: 18 30% 90%;
+    --accent-foreground: 0 0% 12%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 94%;
+    --ring: 18 100% 60%;
+
+    --radius: 0.75rem;
+    
+    /* Custom fashion tokens */
+    --hermes-orange: 18 100% 60%;
+    --luxury-black: 0 0% 8%;
+    --soft-white: 0 0% 98%;
+    --warm-gray: 0 0% 45%;
+    
+    /* Gradients - Luxury Dressing Room Theme */
+    --gradient-hero: linear-gradient(135deg, hsl(210 15% 15%), hsl(210 20% 8%));
+    --gradient-card: linear-gradient(145deg, hsl(210 15% 20%), hsl(210 20% 15%));
+    --gradient-luxury: linear-gradient(135deg, hsl(210 15% 10%), hsl(220 20% 18%));
+    --gradient-accent: linear-gradient(135deg, hsl(45 20% 25%), hsl(45 25% 20%));
+    
+    /* Enhanced Shadows for luxury feel */
+    --shadow-elegant: 0 25px 80px -20px hsl(210 20% 5% / 0.4);
+    --shadow-card: 0 8px 32px -8px hsl(210 20% 5% / 0.25);
+    --shadow-hover: 0 32px 100px -20px hsl(45 40% 30% / 0.3);
+    --shadow-glow: 0 0 60px hsl(45 60% 50% / 0.15);
+    
+    /* Luxury colors */
+    --luxury-dark: 210 20% 8%;
+    --luxury-charcoal: 210 15% 15%;
+    --luxury-gold: 45 60% 50%;
+    --primary-glow: 45 80% 60%;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter;
+    /* Mobile optimization */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent zoom on input focus on mobile */
+    font-size: 16px;
+  }
+  
+  /* Mobile touch optimization */
+  @media (max-width: 768px) {
+    html {
+      font-size: 16px;
+    }
+    
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Improve touch scrolling */
+    * {
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Better button spacing on mobile */
+    .btn-mobile {
+      padding: 0.75rem 1.5rem;
+      min-height: 44px;
+    }
+  }
+}
+
+@layer components {
+  /* Fashion-forward animations */
+  .fashion-enter {
+    @apply animate-[fadeInUp_0.6s_ease-out];
+  }
+  
+  .outfit-card {
+    @apply bg-card rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-[var(--shadow-hover)] transform hover:-translate-y-2;
+  }
+  
+  .hero-gradient {
+    background: var(--gradient-hero);
+  }
+  
+  .text-gradient {
+    background: var(--gradient-hero);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass {
+    @apply bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl;
+  }
+
+  .glass-dark {
+    @apply bg-black/20 backdrop-blur-lg border border-white/10 shadow-xl;
+  }
+
+  .premium-card {
+    @apply relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-md shadow-2xl transition-all duration-500 hover:shadow-primary/20 hover:-translate-y-1;
+  }
+
+  .premium-text {
+    @apply font-playfair tracking-wide;
+  }
+}
+
+@layer utilities {
+  .shadow-elegant {
+    box-shadow: var(--shadow-elegant);
+  }
+  
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+}
+
+/* Custom keyframes for fashion animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
