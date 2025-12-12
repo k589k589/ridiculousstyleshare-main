@@ -282,11 +282,11 @@ const StyleChanger = () => {
         {/* Content Container */}
         <div className="relative z-10">
           {/* Header */}
-          <div className="relative pt-20 pb-0 px-4 text-center">
+          <div className="relative pt-8 pb-0 px-4 text-center">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white leading-tight">
               {t('styleChanger.title')}
             </h1>
-            <p className="text-lg text-hermes mb-8">
+            <p className="text-lg text-hermes mb-2">
               {t('styleChanger.subtitle')}
             </p>
           </div>
@@ -295,7 +295,7 @@ const StyleChanger = () => {
           <ParallaxShowcase />
 
           {/* Upload Section */}
-          <div className="relative pb-20 pt-8">
+          <div className="relative pb-20 pt-2">
             {/* Upload Card */}
             <div className="relative group mx-2 mb-8">
               <div className="group relative overflow-hidden bg-gradient-to-br from-white/4 to-white/1 backdrop-blur-2xl shadow-[0_40px_120px_-20px_rgba(0,0,0,0.6)] hover:shadow-[0_50px_150px_-20px_rgba(197,149,96,0.4)] transition-all duration-700 hover:-translate-y-3 hover:scale-[1.02] rounded-lg">
