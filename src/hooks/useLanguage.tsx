@@ -363,6 +363,12 @@ const translations = {
     'styleChanger.selectGender': '選擇性別',
     'styleChanger.male': '男性',
     'styleChanger.female': '女性',
+    'styleChanger.missionTitle': '我們的使命',
+    'styleChanger.missionText': '讓每個人都看見自己不同的可能性，不再受限於習慣的穿搭。',
+    'styleChanger.startJourney': '開始改造旅程',
+    'styleChanger.transformShowcaseTitle': '改造過程展示',
+    'styleChanger.step1': '原圖',
+    'styleChanger.step2': '改造後',
 
     // Style Trying
     'styleTrying.title': '試新風格',
@@ -813,6 +819,12 @@ const translations = {
     'styleChanger.selectGender': 'Select Gender',
     'styleChanger.male': 'Male',
     'styleChanger.female': 'Female',
+    'styleChanger.missionTitle': 'Our Mission',
+    'styleChanger.missionText': 'Let everyone see their different possibilities and no longer be limited by habitual outfits.',
+    'styleChanger.startJourney': 'Start Your Journey',
+    'styleChanger.transformShowcaseTitle': 'Transformation Showcase',
+    'styleChanger.step1': 'Original',
+    'styleChanger.step2': 'After',
 
     // Style Trying
     'styleTrying.title': 'Try New Style',

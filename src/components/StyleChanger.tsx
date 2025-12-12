@@ -292,19 +292,6 @@ const StyleChanger = () => {
 
       {/* Unified Style Changer Section with Shared Background */}
       <section id="style-changer-section" className="relative min-h-screen bg-[#1a1a1a]">
-        {/* Shared Sticky Background */}
-        <div className="absolute inset-0 h-full w-full">
-          <div className="sticky top-0 h-screen w-full overflow-hidden">
-            <img
-              src={bgImage}
-              alt="Luxury closet background"
-              className="w-full h-full object-cover opacity-50"
-            />
-            {/* Gradient Fade for seamless transition */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/10 to-black/40"></div>
-          </div>
-        </div>
-
         {/* Content Container */}
         <div className="relative z-10">
           {/* Header */}
