@@ -258,9 +258,6 @@ const StyleChanger = () => {
             <h2 className="text-4xl md:text-6xl font-bold text-white tracking-wider">
               {t('styleChanger.missionTitle')}
             </h2>
-            <p className="text-xl md:text-2xl text-gray-200 leading-relaxed font-light">
-              {t('styleChanger.missionText')}
-            </p>
             <Button
               onClick={() => document.getElementById('style-changer-section')?.scrollIntoView({ behavior: 'smooth' })}
               className="mt-8 bg-white text-black hover:bg-gray-200 text-lg px-8 py-6 rounded-full transition-all duration-300 transform hover:scale-105"
