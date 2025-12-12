@@ -270,20 +270,10 @@ const StyleChanger = () => {
             <div className="flex gap-4 justify-center mt-4">
               <Button
                 variant="outline"
-                onClick={() => {
-                  const tryOnSection = document.querySelector('[data-section="virtual-tryon"]');
-                  tryOnSection?.scrollIntoView({ behavior: 'smooth' });
-                }}
+                onClick={() => window.location.href = '/community'}
                 className="bg-black/50 border-white/30 text-white hover:bg-white/10"
               >
-                {t('styleChanger.quickAction1') || '試模特穿搭'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => openTryOnRoom()}
-                className="bg-black/50 border-white/30 text-white hover:bg-white/10"
-              >
-                {t('styleChanger.quickAction2') || '試穿室'}
+                穿搭社群
               </Button>
             </div>
           </div>
