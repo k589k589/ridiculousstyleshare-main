@@ -65,13 +65,13 @@ const ParallaxShowcase = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative h-[250vh] z-20 pointer-events-none">
+    <section ref={sectionRef} className="relative h-[180vh] z-20 pointer-events-none">
       <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden">
         {/* Images Layer */}
         <div className="relative w-full h-full flex items-center justify-center perspective-1000 px-2 md:px-8 gap-4 md:gap-8">
 
           {/* CASE 1 (Left) */}
-          <div className="relative w-1/2 h-[60vh] md:h-[70vh]">
+          <div className="relative w-1/2 h-[50vh] md:h-[60vh]">
             <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
               <img
                 ref={originalRef1}
@@ -91,7 +91,7 @@ const ParallaxShowcase = () => {
           </div>
 
           {/* CASE 2 (Right) */}
-          <div className="relative w-1/2 h-[60vh] md:h-[70vh]">
+          <div className="relative w-1/2 h-[50vh] md:h-[60vh]">
             <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
               <img
                 ref={originalRef2}
@@ -255,7 +255,7 @@ const StyleChanger = () => {
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative h-full flex items-center justify-center text-center px-4">
           <div className="max-w-4xl space-y-8 animate-fade-in">
-            <h2 className="text-4xl md:text-6xl font-bold text-white tracking-wider">
+            <h2 className="text-xl md:text-3xl lg:text-4xl font-bold text-white tracking-wider whitespace-nowrap">
               {t('styleChanger.missionTitle')}
             </h2>
             <Button
@@ -268,7 +268,7 @@ const StyleChanger = () => {
               <Button
                 variant="outline"
                 onClick={() => window.location.href = '/community'}
-                className="bg-black/50 border-white/30 text-white hover:bg-white/10"
+                className="bg-orange-500 border-orange-500 text-white hover:bg-orange-600 hover:border-orange-600"
               >
                 穿搭社群
               </Button>
@@ -278,7 +278,7 @@ const StyleChanger = () => {
       </section>
 
       {/* Unified Style Changer Section with Shared Background */}
-      <section id="style-changer-section" className="relative min-h-screen bg-[#1a1a1a]">
+      <section id="style-changer-section" className="relative min-h-screen bg-black">
         {/* Content Container */}
         <div className="relative z-10">
           {/* Header */}
