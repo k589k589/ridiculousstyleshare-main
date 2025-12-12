@@ -369,6 +369,7 @@ const translations = {
     'styleChanger.transformShowcaseTitle': '改造過程展示',
     'styleChanger.step1': '原圖',
     'styleChanger.step2': '改造後',
+    'styleChanger.communityButton': '穿搭社群',
 
     // Style Trying
     'styleTrying.title': '試新風格',
@@ -825,6 +826,7 @@ const translations = {
     'styleChanger.transformShowcaseTitle': 'Transformation Showcase',
     'styleChanger.step1': 'Original',
     'styleChanger.step2': 'After',
+    'styleChanger.communityButton': 'Style Community',
 
     // Style Trying
     'styleTrying.title': 'Try New Style',

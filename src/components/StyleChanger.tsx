@@ -20,9 +20,19 @@ import parallaxOriginal from "@/assets/parallax-original.png";
 import parallaxResult from "@/assets/parallax-result.png";
 import parallaxOriginal2 from "@/assets/parallax-original-2.jpg";
 import parallaxResult2 from "@/assets/parallax-result-2.jpg";
+import parallaxOriginal3 from "@/assets/parallax-original-3.png";
+import parallaxResult3 from "@/assets/parallax-result-3.png";
+import parallaxOriginal4 from "@/assets/parallax-original-4.jpg";
+import parallaxResult4 from "@/assets/parallax-result-4.png";
 
 const ParallaxShowcase = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
+  // Row 1 (New cases - on top)
+  const originalRef3 = useRef<HTMLImageElement>(null);
+  const resultRef3 = useRef<HTMLImageElement>(null);
+  const originalRef4 = useRef<HTMLImageElement>(null);
+  const resultRef4 = useRef<HTMLImageElement>(null);
+  // Row 2 (Original cases)
   const originalRef1 = useRef<HTMLImageElement>(null);
   const resultRef1 = useRef<HTMLImageElement>(null);
   const originalRef2 = useRef<HTMLImageElement>(null);
@@ -55,6 +65,9 @@ const ParallaxShowcase = () => {
         }
       };
 
+      // Animate all 4 pairs
+      animatePair(originalRef3.current, resultRef3.current);
+      animatePair(originalRef4.current, resultRef4.current);
       animatePair(originalRef1.current, resultRef1.current);
       animatePair(originalRef2.current, resultRef2.current);
     };
@@ -65,13 +78,55 @@ const ParallaxShowcase = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative h-[180vh] z-20 pointer-events-none">
+    <section ref={sectionRef} className="relative h-[200vh] z-20 pointer-events-none">
       <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden">
-        {/* Images Layer */}
-        <div className="relative w-full h-full flex items-center justify-center perspective-1000 px-2 md:px-8 gap-4 md:gap-8">
+        {/* 2x2 Grid of transformation cases */}
+        <div className="grid grid-cols-2 grid-rows-2 gap-2 md:gap-4 w-full h-full p-2 md:p-4">
 
-          {/* CASE 1 (Left) */}
-          <div className="relative w-1/2 h-[50vh] md:h-[60vh]">
+          {/* ROW 1 - New Cases (Top) */}
+          {/* CASE 3 (Top Left - Mountain guy) */}
+          <div className="relative w-full h-full">
+            <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
+              <img
+                ref={originalRef3}
+                src={parallaxOriginal3}
+                alt="Original Style 3"
+                className="w-full h-full object-contain rounded-sm shadow-2xl brightness-[0.8] filter will-change-transform"
+              />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center z-20 transition-transform duration-100 ease-out will-change-transform">
+              <img
+                ref={resultRef3}
+                src={parallaxResult3}
+                alt="Transformed Style 3"
+                className="w-full h-full object-contain rounded-sm shadow-[0_35px_60px_-15px_rgba(0,0,0,0.9)] opacity-0 will-change-transform"
+              />
+            </div>
+          </div>
+
+          {/* CASE 4 (Top Right - Model blazer to blouse) */}
+          <div className="relative w-full h-full">
+            <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
+              <img
+                ref={originalRef4}
+                src={parallaxOriginal4}
+                alt="Original Style 4"
+                className="w-full h-full object-contain rounded-sm shadow-2xl brightness-[0.8] filter will-change-transform"
+              />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center z-20 transition-transform duration-100 ease-out will-change-transform">
+              <img
+                ref={resultRef4}
+                src={parallaxResult4}
+                alt="Transformed Style 4"
+                className="w-full h-full object-contain rounded-sm shadow-[0_35px_60px_-15px_rgba(0,0,0,0.9)] opacity-0 will-change-transform"
+              />
+            </div>
+          </div>
+
+          {/* ROW 2 - Original Cases (Bottom) */}
+          {/* CASE 1 (Bottom Left - Santa) */}
+          <div className="relative w-full h-full">
             <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
               <img
                 ref={originalRef1}
@@ -90,8 +145,8 @@ const ParallaxShowcase = () => {
             </div>
           </div>
 
-          {/* CASE 2 (Right) */}
-          <div className="relative w-1/2 h-[50vh] md:h-[60vh]">
+          {/* CASE 2 (Bottom Right - Girl dress) */}
+          <div className="relative w-full h-full">
             <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
               <img
                 ref={originalRef2}
@@ -260,7 +315,7 @@ const StyleChanger = () => {
             </h2>
             <Button
               onClick={() => document.getElementById('style-changer-section')?.scrollIntoView({ behavior: 'smooth' })}
-              className="mt-8 bg-white text-black hover:bg-gray-200 text-lg px-8 py-6 rounded-full transition-all duration-300 transform hover:scale-105"
+              className="mt-8 bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8 py-6 rounded-full transition-all duration-300 transform hover:scale-105"
             >
               {t('styleChanger.startJourney')}
             </Button>
@@ -270,7 +325,7 @@ const StyleChanger = () => {
                 onClick={() => window.location.href = '/community'}
                 className="bg-orange-500 border-orange-500 text-white hover:bg-orange-600 hover:border-orange-600"
               >
-                穿搭社群
+                {t('styleChanger.communityButton')}
               </Button>
             </div>
           </div>
