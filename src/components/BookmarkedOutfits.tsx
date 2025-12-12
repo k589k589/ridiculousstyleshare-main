@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -24,32 +22,40 @@ interface VipSubscription {
 interface BookmarkedOutfitsProps {
   userId: string;
   vipSubscription: VipSubscription | null;
+  isActive?: boolean; // Only load when tab is active
 }
 
-const BookmarkedOutfits: React.FC<BookmarkedOutfitsProps> = ({ userId, vipSubscription }) => {
+const BookmarkedOutfits: React.FC<BookmarkedOutfitsProps> = ({ userId, isActive = false }) => {
   const [bookmarkedOutfits, setBookmarkedOutfits] = useState<UserOutfit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false); // Track if we've loaded once
   const { t } = useLanguage();
 
   useEffect(() => {
-    fetchBookmarkedOutfits();
-  }, [userId]);
+    // Only fetch when tab becomes active AND we haven't loaded yet
+    if (isActive && !hasLoaded) {
+      fetchBookmarkedOutfits();
+    }
+  }, [userId, isActive, hasLoaded]);
 
   const fetchBookmarkedOutfits = async () => {
     try {
       setLoading(true);
-      
-      // Get bookmarked outfit IDs
+
+      // Get bookmarked outfit IDs first (simpler query that's more reliable)
       const { data: bookmarks, error: bookmarksError } = await supabase
         .from('outfit_bookmarks')
         .select('outfit_id')
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20); // Limit for mobile performance
 
       if (bookmarksError) throw bookmarksError;
 
       if (!bookmarks || bookmarks.length === 0) {
         setBookmarkedOutfits([]);
         setLoading(false);
+        setHasLoaded(true);
         return;
       }
 
@@ -58,13 +64,13 @@ const BookmarkedOutfits: React.FC<BookmarkedOutfitsProps> = ({ userId, vipSubscr
       // Get outfit details
       const { data: outfits, error: outfitsError } = await supabase
         .from('outfits')
-        .select('*')
-        .in('id', outfitIds)
-        .order('created_at', { ascending: false });
+        .select('id, title, description, image_url, style_tags, likes_count, created_at')
+        .in('id', outfitIds);
 
       if (outfitsError) throw outfitsError;
 
       setBookmarkedOutfits(outfits || []);
+      setHasLoaded(true);
     } catch (error) {
       console.error('Error fetching bookmarked outfits:', error);
       toast.error(t('toast.bookmarksLoadError'));
@@ -73,77 +79,57 @@ const BookmarkedOutfits: React.FC<BookmarkedOutfitsProps> = ({ userId, vipSubscr
     }
   };
 
+  // Show nothing if not active and never loaded
+  if (!isActive && !hasLoaded) {
+    return null;
+  }
+
   if (loading) {
     return (
-      <Card className="border-border/50 bg-card/50">
-        <CardContent className="p-16 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground mt-4">載入中...</p>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-3 gap-1 md:gap-4">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="aspect-square bg-muted animate-pulse" />
+        ))}
+      </div>
     );
   }
 
   if (bookmarkedOutfits.length === 0) {
     return (
-      <Card className="border-border/50 bg-card/50">
-        <CardContent className="p-16 text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
-            <Heart className="w-10 h-10 text-primary" />
-          </div>
-          <h3 className="text-2xl font-semibold mb-3">還沒有收藏</h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            開始收藏你喜歡的穿搭吧
-          </p>
-        </CardContent>
-      </Card>
+      <div className="text-center py-20">
+        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-muted/30 flex items-center justify-center">
+          <Heart className="w-10 h-10 text-muted-foreground" />
+        </div>
+        <h3 className="text-2xl font-playfair font-bold mb-3">還沒有收藏</h3>
+        <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+          開始收藏你喜歡的穿搭吧
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-3 gap-1 md:gap-4">
       {bookmarkedOutfits.map((outfit) => (
-        <Card key={outfit.id} className={`overflow-hidden transition-all duration-300 border-border/50 ${
-          vipSubscription 
-            ? 'hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 hover:border-primary/30' 
-            : 'hover:shadow-lg hover:-translate-y-1'
-        }`}>
-          <div className="relative aspect-square group">
-            <img 
-              src={outfit.image_url} 
-              alt={outfit.title}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          </div>
-          <CardContent className="p-5 space-y-3">
-            <h3 className="font-semibold text-lg leading-tight">{outfit.title}</h3>
-            {outfit.description && (
-              <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                {outfit.description}
-              </p>
-            )}
-            
-            {outfit.style_tags && outfit.style_tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {outfit.style_tags.slice(0, 3).map((tag, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs font-normal bg-primary/5 text-primary border-primary/20">
-                    {tag}
-                  </Badge>
-                ))}
+        <div
+          key={outfit.id}
+          className="relative aspect-square cursor-pointer group overflow-hidden bg-muted"
+        >
+          <img
+            src={outfit.image_url}
+            alt={outfit.title}
+            loading="lazy"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <div className="flex gap-4 text-white">
+              <div className="flex items-center gap-1">
+                <Heart className="w-5 h-5" fill="white" />
+                <span className="font-semibold">{outfit.likes_count}</span>
               </div>
-            )}
-            
-            <div className="flex items-center justify-between text-sm pt-2 border-t border-border/50">
-              <span className="flex items-center gap-2 text-muted-foreground">
-                <Heart className="w-4 h-4" />
-                {outfit.likes_count}
-              </span>
-              <span className="text-muted-foreground text-xs">
-                {new Date(outfit.created_at).toLocaleDateString('zh-TW')}
-              </span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ))}
     </div>
   );

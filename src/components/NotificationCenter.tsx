@@ -59,7 +59,7 @@ export const NotificationCenter = ({ open, onOpenChange }: NotificationCenterPro
     if (!user) return;
 
     const channel = supabase
-      .channel('notifications')
+      .channel(`notifications-${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -109,7 +109,7 @@ export const NotificationCenter = ({ open, onOpenChange }: NotificationCenterPro
         const outfitIds = notificationsData
           .filter(n => n.outfit_id)
           .map(n => n.outfit_id!);
-        
+
         let outfitsMap = new Map();
         if (outfitIds.length > 0) {
           const { data: outfits } = await supabase
@@ -251,7 +251,7 @@ export const NotificationCenter = ({ open, onOpenChange }: NotificationCenterPro
 
   const getNotificationText = (notification: Notification) => {
     const actorName = notification.actor.name;
-    
+
     switch (notification.type) {
       case 'like':
         return `${actorName} 讚了您的貼文`;
@@ -312,9 +312,8 @@ export const NotificationCenter = ({ open, onOpenChange }: NotificationCenterPro
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 rounded-lg cursor-pointer hover:bg-accent transition-colors ${
-                    !notification.is_read ? 'bg-accent/50' : ''
-                  }`}
+                  className={`p-4 rounded-lg cursor-pointer hover:bg-accent transition-colors ${!notification.is_read ? 'bg-accent/50' : ''
+                    }`}
                   onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex gap-3">

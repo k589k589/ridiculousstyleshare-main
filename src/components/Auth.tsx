@@ -30,7 +30,7 @@ const Auth = () => {
     // Check if this is a password recovery callback
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get('type');
-    
+
     if (type === 'recovery') {
       setIsRecoveryMode(true);
     }
@@ -57,7 +57,7 @@ const Auth = () => {
       setLoading(false);
       return;
     }
-    
+
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
@@ -98,7 +98,7 @@ const Auth = () => {
       setLoading(false);
       return;
     }
-    
+
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
@@ -118,10 +118,26 @@ const Auth = () => {
       return;
     }
 
-    if (!password || password.length < 6) {
+    // Password validation
+    if (!password || password.length < 8) {
       toast({
         title: "註冊失敗",
-        description: "密碼至少需要6個字元",
+        description: "密碼至少需要8個字元",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
+    // Check password complexity
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+
+    if (!hasUppercase || !hasLowercase || !hasNumber) {
+      toast({
+        title: "註冊失敗",
+        description: "密碼必須包含大寫字母、小寫字母和數字",
         variant: "destructive",
       });
       setLoading(false);
@@ -159,6 +175,9 @@ const Auth = () => {
           variant: "destructive",
         });
       } else {
+        // Set flag for new user welcome dialog
+        localStorage.setItem('newUserWelcome', 'true');
+
         toast({
           title: "註冊成功！",
           description: "我們已經發送驗證信到您的信箱，請查看信箱以完成註冊。如果沒有收到，請檢查垃圾郵件匣。",
@@ -166,9 +185,9 @@ const Auth = () => {
       }
     } catch (error: any) {
       console.error('Signup error:', error);
-      
+
       let errorMessage = error.message;
-      
+
       // Provide more user-friendly error messages
       if (error.message.includes('already registered')) {
         errorMessage = "此電子信箱已經註冊過了";
@@ -177,7 +196,7 @@ const Auth = () => {
       } else if (error.message.includes('password')) {
         errorMessage = "密碼格式不正確，請確保至少6個字元";
       }
-      
+
       toast({
         title: "註冊失敗",
         description: errorMessage,
@@ -253,7 +272,7 @@ const Auth = () => {
 
   const handleUpdatePassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!newPassword || newPassword.length < 6) {
       toast({
         title: "密碼太短",
@@ -275,7 +294,7 @@ const Auth = () => {
         title: "密碼更新成功！",
         description: "您現在可以使用新密碼登入",
       });
-      
+
       // Clear recovery mode and redirect to main page
       setIsRecoveryMode(false);
       setNewPassword('');
@@ -299,17 +318,17 @@ const Auth = () => {
         {/* Background effects */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,107,53,0.12),transparent_50%)]"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,107,53,0.08),transparent_50%)]"></div>
-        
+
         <Card className="w-full max-w-md bg-gray-900/80 backdrop-blur-xl border-gray-800 shadow-2xl relative z-10">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#FF6B35] to-transparent"></div>
-          
+
           <CardHeader className="text-center space-y-2">
             <CardTitle className="text-2xl font-bold text-white">重設密碼</CardTitle>
             <CardDescription className="text-gray-400">
               請輸入您的新密碼
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             <form onSubmit={handleUpdatePassword} className="space-y-4">
               <div className="space-y-2">
@@ -325,9 +344,9 @@ const Auth = () => {
                   className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-[#FF6B35] focus:ring-[#FF6B35]/20"
                 />
               </div>
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C5A] hover:from-[#FF5520] hover:to-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/20 transition-all duration-300" 
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C5A] hover:from-[#FF5520] hover:to-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/20 transition-all duration-300"
                 disabled={loading}
               >
                 {loading ? '更新中...' : '更新密碼'}
@@ -344,15 +363,15 @@ const Auth = () => {
       {/* Background effects with Hermès orange */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,107,53,0.12),transparent_50%)]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,107,53,0.08),transparent_50%)]"></div>
-      
+
       {/* Decorative elements */}
       <div className="absolute top-20 left-10 w-32 h-32 bg-[#FF6B35]/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-20 right-10 w-40 h-40 bg-[#FF6B35]/10 rounded-full blur-3xl"></div>
-      
+
       <Card className="w-full max-w-md bg-gray-900/80 backdrop-blur-xl border-gray-800 shadow-2xl relative z-10 overflow-hidden">
         {/* Top accent line */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#FF6B35] to-transparent"></div>
-        
+
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-between items-start">
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-white via-[#FF6B35] to-white bg-clip-text text-transparent flex-1">
@@ -374,20 +393,20 @@ const Auth = () => {
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-gray-800/50">
-              <TabsTrigger 
-                value="login" 
+              <TabsTrigger
+                value="login"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B35] data-[state=active]:to-[#FF8C5A] data-[state=active]:text-white"
               >
                 {t('auth.login')}
               </TabsTrigger>
-              <TabsTrigger 
-                value="signup" 
+              <TabsTrigger
+                value="signup"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B35] data-[state=active]:to-[#FF8C5A] data-[state=active]:text-white"
               >
                 {t('auth.signup')}
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="login">
               <div className="space-y-4 pt-2">
                 <Button
@@ -397,14 +416,14 @@ const Auth = () => {
                   onClick={handleGoogleLogin}
                 >
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                   </svg>
                   {t('auth.continueWithGoogle')}
                 </Button>
-                
+
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t border-gray-700" />
@@ -414,7 +433,7 @@ const Auth = () => {
                   </div>
                 </div>
               </div>
-              
+
               <form onSubmit={handleLogin} className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-gray-300">{t('auth.email')}</Label>
@@ -432,9 +451,9 @@ const Auth = () => {
                     <Label htmlFor="password" className="text-gray-300">{t('auth.password')}</Label>
                     <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button 
-                          type="button" 
-                          variant="link" 
+                        <Button
+                          type="button"
+                          variant="link"
                           className="text-[#FF6B35] hover:text-[#FF8C5A] p-0 h-auto text-sm"
                         >
                           忘記密碼？
@@ -479,16 +498,16 @@ const Auth = () => {
                     className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-[#FF6B35] focus:ring-[#FF6B35]/20"
                   />
                 </div>
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C5A] hover:from-[#FF5520] hover:to-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/20 transition-all duration-300" 
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C5A] hover:from-[#FF5520] hover:to-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/20 transition-all duration-300"
                   disabled={loading}
                 >
                   {loading ? t('auth.loggingIn') : t('auth.login')}
                 </Button>
               </form>
             </TabsContent>
-            
+
             <TabsContent value="signup">
               <div className="space-y-4 pt-2">
                 <Button
@@ -498,14 +517,14 @@ const Auth = () => {
                   onClick={handleGoogleLogin}
                 >
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                   </svg>
                   {t('auth.continueWithGoogle')}
                 </Button>
-                
+
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t border-gray-700" />
@@ -515,7 +534,7 @@ const Auth = () => {
                   </div>
                 </div>
               </div>
-              
+
               <form onSubmit={handleSignup} className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-gray-300">{t('auth.name')}</Label>
@@ -650,9 +669,9 @@ const Auth = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C5A] hover:from-[#FF5520] hover:to-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/20 transition-all duration-300" 
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C5A] hover:from-[#FF5520] hover:to-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/20 transition-all duration-300"
                   disabled={loading}
                 >
                   {loading ? t('auth.signingUp') : t('auth.signup')}

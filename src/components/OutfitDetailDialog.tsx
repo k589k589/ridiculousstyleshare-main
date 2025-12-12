@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, Send, User, MoreHorizontal, UserPlus, Bookmark, Flag } from 'lucide-react';
+import { Heart, MessageCircle, Send, User, MoreHorizontal, UserPlus, Bookmark, Flag, Shirt } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -18,6 +19,8 @@ import { Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ReportDialog } from '@/components/ReportDialog';
 import { ReportUserDialog } from '@/components/ReportUserDialog';
+import EditOutfitDialog from '@/components/EditOutfitDialog';
+import { Edit } from 'lucide-react';
 
 interface Comment {
   id: string;
@@ -62,7 +65,13 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
   const [isFollowing, setIsFollowing] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
+
   const [reportUserDialogOpen, setReportUserDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [tryOnConfirmDialog, setTryOnConfirmDialog] = useState<{ open: boolean; outfit: typeof outfit }>({ open: false, outfit: null });
+  const [isVip, setIsVip] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [tryonsCount, setTryonsCount] = useState(0);
   const { user } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -74,8 +83,45 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
       checkLikeStatus();
       checkFollowStatus();
       checkBookmarkStatus();
+      if (user) {
+        checkVipStatus();
+        checkAdminStatus();
+        fetchTryonCount();
+      }
     }
-  }, [isOpen, outfit?.id]);
+  }, [isOpen, outfit?.id, user]);
+
+  const checkVipStatus = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('vip_subscriptions')
+      .select('status')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    setIsVip(!!data);
+  };
+
+  const checkAdminStatus = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+    setIsAdmin(!!data);
+  };
+
+  const fetchTryonCount = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('user_tryons')
+      .select('tryons_count')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    setTryonsCount(data?.tryons_count || 0);
+  };
 
   useEffect(() => {
     setIsLiked(initialIsLiked || false);
@@ -84,7 +130,7 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
 
   const checkLikeStatus = async () => {
     if (!user || !outfit) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('outfit_likes')
@@ -102,7 +148,7 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
 
   const checkFollowStatus = async () => {
     if (!user || !outfit) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('user_follows')
@@ -120,7 +166,7 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
 
   const checkBookmarkStatus = async () => {
     if (!user || !outfit) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('outfit_bookmarks')
@@ -138,7 +184,7 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
 
   const fetchComments = async () => {
     if (!outfit) return;
-    
+
     setLoading(true);
     try {
       const { data: commentsData, error } = await supabase
@@ -190,10 +236,10 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
 
     const newIsLiked = !isLiked;
     const newLikesCount = newIsLiked ? likesCount + 1 : likesCount - 1;
-    
+
     setIsLiked(newIsLiked);
     setLikesCount(newLikesCount);
-    
+
     if (onLikeChange) {
       onLikeChange(outfit.id, newIsLiked);
     }
@@ -257,7 +303,7 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
 
       setNewComment('');
       await fetchComments();
-      
+
       toast({
         title: t('community.commentSuccess'),
       });
@@ -290,7 +336,7 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
       }
 
       await fetchComments();
-      
+
       toast({
         title: t('community.deleteSuccess') || '刪除成功',
       });
@@ -389,18 +435,30 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
       <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0 overflow-hidden">
         <DialogTitle className="sr-only">{outfit.title}</DialogTitle>
         <DialogDescription className="sr-only">{outfit.description || 'Outfit details'}</DialogDescription>
-        <div className="flex h-full overflow-hidden">
+        <div className="flex flex-col md:flex-row h-full overflow-hidden">
           {/* Left side - Image */}
-          <div className="flex-1 bg-black flex items-center justify-center overflow-hidden">
+          <div className="w-full md:flex-1 h-[50vh] md:h-full bg-black flex items-center justify-center overflow-hidden relative">
             <img
               src={outfit.image_url}
               alt={outfit.title}
               className="max-h-full max-w-full object-contain"
             />
+            {/* Prominent Close Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="absolute top-4 right-4 z-10 bg-black/60 hover:bg-black/80 text-white rounded-full h-10 w-10 backdrop-blur-sm border border-white/20"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </Button>
           </div>
 
           {/* Right side - Content and Comments */}
-          <div className="w-96 flex flex-col bg-background overflow-hidden">
+          <div className="w-full md:w-96 flex flex-col bg-background overflow-hidden h-[50vh] md:h-full">
             {/* Header with user info */}
             <div className="p-4 border-b flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-3 cursor-pointer" onClick={() => handleUserClick(outfit.user_id)}>
@@ -423,6 +481,12 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
                     <DropdownMenuItem onClick={handleFollow}>
                       <UserPlus className="h-4 w-4 mr-2" />
                       {isFollowing ? '取消追蹤' : '追蹤帳號'}
+                    </DropdownMenuItem>
+                  )}
+                  {user && outfit.user_id === user.id && (
+                    <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      {t('community.editOutfit')}
                     </DropdownMenuItem>
                   )}
                   {user && (
@@ -493,7 +557,7 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
                               <div className="flex items-start gap-2">
-                                <span 
+                                <span
                                   className="font-semibold text-sm cursor-pointer hover:underline"
                                   onClick={() => handleUserClick(comment.user_id)}
                                 >
@@ -539,6 +603,39 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
                 <Button variant="ghost" size="sm" className="gap-2">
                   <MessageCircle className="h-5 w-5" />
                   <span>{comments.length}</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1 px-4 py-1 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold transition-all duration-200 ml-auto"
+                  onClick={() => {
+                    if (!user) {
+                      toast({
+                        title: t('auth.loginRequired'),
+                        description: t('community.loginToTry'),
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    if (!isVip && !isAdmin && tryonsCount >= 10) {
+                      toast({
+                        title: '已達使用上限',
+                        description: '升級 VIP 會員即可無限試穿！',
+                        variant: "destructive",
+                        action: (
+                          <Button variant="outline" size="sm" onClick={() => navigate('/profile')}>
+                            升級 VIP
+                          </Button>
+                        ),
+                      });
+                      return;
+                    }
+                    setTryOnConfirmDialog({ open: true, outfit });
+                  }}
+                  title={t('community.tryTooltip')}
+                >
+                  <Shirt className="h-4 w-4 mr-1" />
+                  {t('community.try')}
                 </Button>
               </div>
 
@@ -589,6 +686,72 @@ const OutfitDetailDialog = ({ isOpen, onClose, outfit, isLiked: initialIsLiked, 
           />
         </>
       )}
+
+      {outfit && (
+        <EditOutfitDialog
+          isOpen={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          outfit={{
+            id: outfit.id,
+            title: outfit.title,
+            description: outfit.description,
+            style_tags: outfit.style_tags
+          }}
+          onSuccess={() => {
+            // Refresh outfit details if needed or just close dialog
+            // Ideally we should reload the outfit data here, but for now we can rely on parent refresh or just close
+            // The parent component (Community or Profile) might need to refresh the list
+            window.location.reload(); // Simple way to refresh for now
+          }}
+        />
+      )}
+
+      <AlertDialog open={tryOnConfirmDialog.open} onOpenChange={(open) => setTryOnConfirmDialog({ ...tryOnConfirmDialog, open })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('community.tryOnConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isVip ? (
+                <span className="text-yellow-600 font-semibold flex items-center gap-2">
+                  <span>👑</span> {t('community.vipUnlimitedAccess') || 'VIP Exclusive: Enjoy unlimited try-ons!'}
+                </span>
+              ) : (
+                <span>
+                  {t('community.tryOnConfirmDesc')}
+                  <br />
+                  <span className="text-muted-foreground text-xs mt-2 block">
+                    {t('community.remainingTryons') || 'Remaining try-ons:'} {10 - (tryonsCount || 0)}
+                  </span>
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('community.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={async () => {
+              if (tryOnConfirmDialog.outfit) {
+                // Increment try count
+                try {
+                  await supabase.rpc('increment_outfit_tries', { outfit_id: tryOnConfirmDialog.outfit.id });
+                  // Also increment user tryon count if not VIP (handled by DB trigger usually, but we can do it here or just rely on backend)
+                  // For now, we assume backend handles the count increment.
+                } catch (error) {
+                  console.error('Error incrementing try count:', error);
+                }
+
+                navigate('/better-than-model', {
+                  state: {
+                    preloadedClothingImage: tryOnConfirmDialog.outfit.image_url
+                  }
+                });
+              }
+              setTryOnConfirmDialog({ open: false, outfit: null });
+            }}>
+              {t('community.yes')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };

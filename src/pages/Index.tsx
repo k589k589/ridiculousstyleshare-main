@@ -5,8 +5,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/useLanguage';
 import Hero from "@/components/Hero";
 import StyleChanger from "@/components/StyleChanger";
-import OutfitGrid from "@/components/OutfitGrid";
-import Features from "@/components/Features";
 
 const Index = () => {
   const { user } = useAuth();
@@ -19,7 +17,7 @@ const Index = () => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
     const type = hashParams.get('type');
-    
+
     // Handle email confirmation (type might be 'signup' or 'magiclink', or just presence of access_token)
     if (accessToken && type !== 'recovery') {
       // Wait a bit for auth state to update
@@ -30,7 +28,7 @@ const Index = () => {
             description: "",
             duration: 5000,
           });
-          
+
           // Clean up the hash from URL
           window.history.replaceState(null, '', window.location.pathname);
         }
@@ -44,10 +42,10 @@ const Index = () => {
     <div className="w-full">
       <StyleChanger />
       <Hero />
-      <OutfitGrid />
-      <Features />
     </div>
   );
 };
 
 export default Index;
+
+

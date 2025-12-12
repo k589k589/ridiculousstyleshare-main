@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -14,6 +14,107 @@ import {
 } from "@/components/ui/dialog";
 import bgImage from "@/assets/luxury-closet-bg.jpg";
 import missionVideo from "@/assets/mission-bg.mov";
+
+// Parallax showcase images
+import parallaxOriginal from "@/assets/parallax-original.png";
+import parallaxResult from "@/assets/parallax-result.png";
+import parallaxOriginal2 from "@/assets/parallax-original-2.jpg";
+import parallaxResult2 from "@/assets/parallax-result-2.jpg";
+
+const ParallaxShowcase = () => {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const originalRef1 = useRef<HTMLImageElement>(null);
+  const resultRef1 = useRef<HTMLImageElement>(null);
+  const originalRef2 = useRef<HTMLImageElement>(null);
+  const resultRef2 = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!sectionRef.current) return;
+
+      const rect = sectionRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+
+      const distance = -rect.top;
+      const height = rect.height - viewportHeight;
+      let progress = distance / height;
+
+      progress = Math.max(0, Math.min(1, progress));
+
+      // Helper for animation
+      const animatePair = (orig: HTMLImageElement | null, res: HTMLImageElement | null) => {
+        if (orig) {
+          orig.style.transform = `translateY(${progress * -50}px) scale(${1 - progress * 0.05})`;
+          orig.style.opacity = `${1 - Math.pow(progress, 3)}`;
+        }
+        if (res) {
+          const slideUp = 100 - (progress * 100);
+          const scale = 0.9 + (progress * 0.1);
+          res.style.transform = `translateY(${slideUp}px) scale(${scale})`;
+          res.style.opacity = `${Math.pow(progress, 1.5)}`;
+        }
+      };
+
+      animatePair(originalRef1.current, resultRef1.current);
+      animatePair(originalRef2.current, resultRef2.current);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <section ref={sectionRef} className="relative h-[250vh] z-20 pointer-events-none">
+      <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden">
+        {/* Images Layer */}
+        <div className="relative w-full h-full flex items-center justify-center perspective-1000 px-2 md:px-8 gap-4 md:gap-8">
+
+          {/* CASE 1 (Left) */}
+          <div className="relative w-1/2 h-[60vh] md:h-[70vh]">
+            <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
+              <img
+                ref={originalRef1}
+                src={parallaxOriginal}
+                alt="Original Style 1"
+                className="w-full h-full object-contain rounded-sm shadow-2xl brightness-[0.8] filter will-change-transform"
+              />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center z-20 transition-transform duration-100 ease-out will-change-transform">
+              <img
+                ref={resultRef1}
+                src={parallaxResult}
+                alt="Transformed Style 1"
+                className="w-full h-full object-contain rounded-sm shadow-[0_35px_60px_-15px_rgba(0,0,0,0.9)] opacity-0 will-change-transform"
+              />
+            </div>
+          </div>
+
+          {/* CASE 2 (Right) */}
+          <div className="relative w-1/2 h-[60vh] md:h-[70vh]">
+            <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
+              <img
+                ref={originalRef2}
+                src={parallaxOriginal2}
+                alt="Original Style 2"
+                className="w-full h-full object-contain rounded-sm shadow-2xl brightness-[0.8] filter will-change-transform"
+              />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center z-20 transition-transform duration-100 ease-out will-change-transform">
+              <img
+                ref={resultRef2}
+                src={parallaxResult2}
+                alt="Transformed Style 2"
+                className="w-full h-full object-contain rounded-sm shadow-[0_35px_60px_-15px_rgba(0,0,0,0.9)] opacity-0 will-change-transform"
+              />
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+};
 
 const StyleChanger = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -40,6 +141,18 @@ const StyleChanger = () => {
     }
   };
 
+  const openTryOnRoom = () => {
+    const tryOnSection = document.querySelector('[data-section="virtual-tryon"]');
+    if (tryOnSection) {
+      tryOnSection.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      toast({
+        title: "Coming Soon",
+        description: "Virtual Try-On Room is under construction.",
+      });
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedImage || !gender) {
       toast({
@@ -53,7 +166,7 @@ const StyleChanger = () => {
     setIsLoading(true);
     setProgress(0);
     setProgressMessage("正在分析大家穿什麼");
-    
+
     // Simulate progress - 減慢速度
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
@@ -62,7 +175,7 @@ const StyleChanger = () => {
           return 95;
         }
         const newProgress = prev + Math.random() * 2 + 0.5; // 每次增加 0.5-2.5%
-        
+
         // 根據進度更新訊息
         if (newProgress < 33) {
           setProgressMessage("正在分析大家穿什麼");
@@ -71,11 +184,11 @@ const StyleChanger = () => {
         } else {
           setProgressMessage("正在幫你換上新風格");
         }
-        
+
         return newProgress;
       });
     }, 500); // 從 200ms 改為 500ms
-    
+
     try {
       const formData = new FormData();
       formData.append("photo", selectedImage);
@@ -94,17 +207,17 @@ const StyleChanger = () => {
 
       if (response.ok) {
         const result = await response.json();
-        
+
         // Assuming the response contains a photo URL or base64 image
         if (result.photo || result.image || result.url) {
           setResultImage(result.photo || result.image || result.url);
         }
-        
+
         // Extract text from response
         if (result.text || result.description || result.message) {
           setResultText(result.text || result.description || result.message);
         }
-        
+
         toast({
           title: "Success!",
           description: "Your style transformation is ready!",
@@ -139,227 +252,245 @@ const StyleChanger = () => {
         >
           <source src={missionVideo} type="video/mp4" />
         </video>
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/40"></div>
-        
-        {/* Mission Text */}
-        <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 gap-8">
-          <h2 className="text-4xl md:text-6xl font-bold text-white text-center max-w-4xl">
-            {t('styleChanger.mission') || '我們的任務是讓你知道你能多好看'}
-          </h2>
-          
-          {/* Quick Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4">
+        <div className="absolute inset-0 bg-black/60" />
+        <div className="relative h-full flex items-center justify-center text-center px-4">
+          <div className="max-w-4xl space-y-8 animate-fade-in">
+            <h2 className="text-4xl md:text-6xl font-bold text-white tracking-wider">
+              {t('styleChanger.missionTitle')}
+            </h2>
+            <p className="text-xl md:text-2xl text-gray-200 leading-relaxed font-light">
+              {t('styleChanger.missionText')}
+            </p>
             <Button
               onClick={() => document.getElementById('style-changer-section')?.scrollIntoView({ behavior: 'smooth' })}
-              size="lg"
-              className="bg-gradient-to-r from-primary to-orange-400 hover:from-orange-500 hover:to-primary text-white text-lg px-8 py-6"
+              className="mt-8 bg-white text-black hover:bg-gray-200 text-lg px-8 py-6 rounded-full transition-all duration-300 transform hover:scale-105"
             >
-              {t('styleChanger.quickAction1') || '即刻改造自己'}
+              {t('styleChanger.startJourney')}
             </Button>
-            <Button
-              onClick={() => {
-                const tryOnSection = document.querySelector('[data-section="virtual-tryon"]');
-                tryOnSection?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              size="lg"
-              className="bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 backdrop-blur-md text-lg px-8 py-6"
-            >
-              {t('styleChanger.quickAction2') || '試穿室'}
-            </Button>
+            <div className="flex gap-4 justify-center mt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const tryOnSection = document.querySelector('[data-section="virtual-tryon"]');
+                  tryOnSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="bg-black/50 border-white/30 text-white hover:bg-white/10"
+              >
+                {t('styleChanger.quickAction1') || '試模特穿搭'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => openTryOnRoom()}
+                className="bg-black/50 border-white/30 text-white hover:bg-white/10"
+              >
+                {t('styleChanger.quickAction2') || '試穿室'}
+              </Button>
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="style-changer-section" className="relative py-20 overflow-hidden">
-      {/* Background Image */}
-      <img
-        src={bgImage}
-        alt="Luxury closet background"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-      {/* Dark overlay for better text readability */}
-      <div className="absolute inset-0 bg-black/50"></div>
-
-      <div className="w-full relative z-10">
-        {/* Header */}
-        <div className="text-center mb-12 px-4">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
-            {t('styleChanger.title')}
-          </h1>
-          <p className="text-lg text-hermes">
-            {t('styleChanger.subtitle')}
-          </p>
+      {/* Unified Style Changer Section with Shared Background */}
+      <section id="style-changer-section" className="relative min-h-screen bg-[#1a1a1a]">
+        {/* Shared Sticky Background */}
+        <div className="absolute inset-0 h-full w-full">
+          <div className="sticky top-0 h-screen w-full overflow-hidden">
+            <img
+              src={bgImage}
+              alt="Luxury closet background"
+              className="w-full h-full object-cover opacity-50"
+            />
+            {/* Gradient Fade for seamless transition */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/10 to-black/40"></div>
+          </div>
         </div>
 
-        {/* Upload Card */}
-        <div className="relative group mx-2 mb-8">
-          <div className="group relative overflow-hidden bg-gradient-to-br from-white/4 to-white/1 backdrop-blur-2xl shadow-[0_40px_120px_-20px_rgba(0,0,0,0.6)] hover:shadow-[0_50px_150px_-20px_rgba(197,149,96,0.4)] transition-all duration-700 hover:-translate-y-3 hover:scale-[1.02] rounded-lg">
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[hsl(45,60%,50%,0.08)] rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-[hsl(220,60%,50%,0.06)] rounded-full blur-2xl"></div>
-            
-            <div className="relative p-8">
-            <div className="space-y-6">
-              {/* Upload Area */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Label className="text-2xl font-semibold text-white">{t('styleChanger.uploadPhoto')}</Label>
-                  <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
-                    <DialogTrigger asChild>
-                      <button type="button" className="inline-flex items-center">
-                        <Info className="w-7 h-7 text-white/70 hover:text-white cursor-pointer transition-colors" />
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>使用說明 / Instructions</DialogTitle>
-                      </DialogHeader>
-                      <ul className="space-y-4 text-sm">
-                        <li>
-                          <div className="font-medium">1. 盡量上傳清晰的個人獨照並且是全身照片</div>
-                          <div className="text-muted-foreground mt-1">Please upload a clear solo full-body photo</div>
-                        </li>
-                        <li>
-                          <div className="font-medium">2. 出現的結果不一定是最好看的，但一定是完整不同風格</div>
-                          <div className="text-muted-foreground mt-1">Results may vary but will always show a complete style transformation</div>
-                        </li>
-                        <li>
-                          <div className="font-medium">3. 每次出現的結果都會不一樣，所以可以盡量嘗試</div>
-                          <div className="text-muted-foreground mt-1">Each result will be different, so feel free to try multiple times</div>
-                        </li>
-                        <li>
-                          <div className="font-medium">4. 如果等太久有可能是模型跑失敗了</div>
-                          <div className="text-muted-foreground mt-1">If it takes too long, the model may have failed</div>
-                        </li>
-                      </ul>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-                <div className="relative">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                    id="photo-upload"
-                  />
-                  <label
-                    htmlFor="photo-upload"
-                    className="border-2 border-dashed border-white/10 rounded-lg p-8 text-center cursor-pointer hover:border-[hsl(45,60%,50%)] transition-colors bg-white/5 backdrop-blur-sm flex flex-col items-center justify-center"
-                  >
-                    {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="max-h-64 mx-auto rounded-lg"
-                      />
-                    ) : (
-                      <div className="space-y-2">
-                        <p className="text-white/60">點擊上傳照片</p>
+        {/* Content Container */}
+        <div className="relative z-10">
+          {/* Header */}
+          <div className="relative pt-20 pb-0 px-4 text-center">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white leading-tight">
+              {t('styleChanger.title')}
+            </h1>
+            <p className="text-lg text-hermes mb-8">
+              {t('styleChanger.subtitle')}
+            </p>
+          </div>
+
+          {/* Parallax Showcase inserted between Header and Upload */}
+          <ParallaxShowcase />
+
+          {/* Upload Section */}
+          <div className="relative pb-20 pt-8">
+            {/* Upload Card */}
+            <div className="relative group mx-2 mb-8">
+              <div className="group relative overflow-hidden bg-gradient-to-br from-white/4 to-white/1 backdrop-blur-2xl shadow-[0_40px_120px_-20px_rgba(0,0,0,0.6)] hover:shadow-[0_50px_150px_-20px_rgba(197,149,96,0.4)] transition-all duration-700 hover:-translate-y-3 hover:scale-[1.02] rounded-lg">
+                {/* Decorative elements */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[hsl(45,60%,50%,0.08)] rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-[hsl(220,60%,50%,0.06)] rounded-full blur-2xl"></div>
+
+                <div className="relative p-8">
+                  <div className="space-y-6">
+                    {/* Upload Area */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Label className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-white leading-tight">{t('styleChanger.uploadPhoto')}</Label>
+                        <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
+                          <DialogTrigger asChild>
+                            <button type="button" className="inline-flex items-center">
+                              <Info className="w-7 h-7 text-white/70 hover:text-white cursor-pointer transition-colors" />
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>使用說明 / Instructions</DialogTitle>
+                            </DialogHeader>
+                            <ul className="space-y-4 text-sm">
+                              <li>
+                                <div className="font-medium">1. 盡量上傳清晰的個人獨照並且是全身照片</div>
+                                <div className="text-muted-foreground mt-1">Please upload a clear solo full-body photo</div>
+                              </li>
+                              <li>
+                                <div className="font-medium">2. 出現的結果不一定是最好看的，但一定是完整不同風格</div>
+                                <div className="text-muted-foreground mt-1">Results may vary but will always show a complete style transformation</div>
+                              </li>
+                              <li>
+                                <div className="font-medium">3. 每次出現的結果都會不一樣，所以可以盡量嘗試</div>
+                                <div className="text-muted-foreground mt-1">Each result will be different, so feel free to try multiple times</div>
+                              </li>
+                              <li>
+                                <div className="font-medium">4. 如果等太久有可能是模型跑失敗了</div>
+                                <div className="text-muted-foreground mt-1">If it takes too long, the model may have failed</div>
+                              </li>
+                            </ul>
+                          </DialogContent>
+                        </Dialog>
                       </div>
-                    )}
-                  </label>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
+                          id="photo-upload"
+                        />
+                        <label
+                          htmlFor="photo-upload"
+                          className="border-2 border-dashed border-white/10 rounded-lg p-8 text-center cursor-pointer hover:border-[hsl(45,60%,50%)] transition-colors bg-white/5 backdrop-blur-sm flex flex-col items-center justify-center"
+                        >
+                          {imagePreview ? (
+                            <img
+                              src={imagePreview}
+                              alt="Preview"
+                              className="max-h-64 mx-auto rounded-lg"
+                            />
+                          ) : (
+                            <div className="space-y-2">
+                              <p className="text-white/60">點擊上傳照片</p>
+                            </div>
+                          )}
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Gender Selection */}
+                    <div>
+                      <Label className="text-base font-semibold mb-3 block text-white">{t('styleChanger.selectGender')}</Label>
+                      <RadioGroup value={gender} onValueChange={setGender} className="space-y-3">
+                        <div className="flex items-center space-x-3 p-4 rounded-xl border border-white/20 hover:border-hermes transition-colors cursor-pointer bg-black/30">
+                          <RadioGroupItem value="male" id="male" />
+                          <Label htmlFor="male" className="cursor-pointer flex-1 text-white">{t('styleChanger.male')}</Label>
+                        </div>
+                        <div className="flex items-center space-x-3 p-4 rounded-xl border border-white/20 hover:border-hermes transition-colors cursor-pointer bg-black/30">
+                          <RadioGroupItem value="female" id="female" />
+                          <Label htmlFor="female" className="cursor-pointer flex-1 text-white">{t('styleChanger.female')}</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    {/* Submit Button */}
+                    <Button
+                      id="transform-style-button"
+                      onClick={handleSubmit}
+                      disabled={!selectedImage || !gender || isLoading}
+                      className="w-full h-auto min-h-12 text-base bg-gradient-to-r from-primary to-orange-400 hover:from-orange-500 hover:to-primary text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-300"
+                    >
+                      {isLoading ? (
+                        <div className="flex flex-col items-center py-2 gap-1">
+                          <span className="font-semibold">We are changing you. {Math.floor(progress)}%</span>
+                          <span className="text-sm font-normal">(Estimated time: 1 min 30 sec)</span>
+                          <span className="text-sm font-normal animate-pulse mt-1">✨ {progressMessage}</span>
+                        </div>
+                      ) : "Transform My Style"}
+                    </Button>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              {/* Gender Selection */}
-              <div>
-                <Label className="text-base font-semibold mb-3 block text-white">{t('styleChanger.selectGender')}</Label>
-                <RadioGroup value={gender} onValueChange={setGender} className="space-y-3">
-                  <div className="flex items-center space-x-3 p-4 rounded-xl border border-white/20 hover:border-hermes transition-colors cursor-pointer bg-black/30">
-                    <RadioGroupItem value="male" id="male" />
-                    <Label htmlFor="male" className="cursor-pointer flex-1 text-white">{t('styleChanger.male')}</Label>
+            {/* Result Display */}
+            {resultImage && (
+              <div className="mt-12 relative group">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-orange-400 bg-clip-text text-transparent">
+                    Your New Style
+                  </h3>
+                  <p className="text-muted-foreground mt-2">Here's your transformed look!</p>
+                </div>
+                <div className="w-full">
+                  <img
+                    src={resultImage}
+                    alt="Style transformation result"
+                    className="w-full h-auto shadow-2xl"
+                  />
+                  {resultText && (
+                    <div className="mt-6 p-6 bg-black/40 border border-white/10 rounded-2xl backdrop-blur-md">
+                      <p className="text-white text-center text-lg">{resultText}</p>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                    <Button
+                      onClick={() => {
+                        document.getElementById('transform-style-button')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }}
+                      className="bg-gradient-to-r from-primary to-orange-400 hover:from-orange-500 hover:to-primary text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-300"
+                      size="lg"
+                    >
+                      {t('styleChanger.tryAgain')}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const tryOnSection = document.querySelector('[data-section="virtual-tryon"]');
+                        tryOnSection?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="bg-gradient-to-r from-primary to-orange-400 hover:from-orange-500 hover:to-primary text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-300"
+                      size="lg"
+                    >
+                      {t('styleChanger.trySpecific')}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = resultImage;
+                        link.download = 'style-transformation.jpg';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                      className="bg-gradient-to-r from-primary to-orange-400 hover:from-orange-500 hover:to-primary text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-300"
+                      size="lg"
+                    >
+                      {t('styleChanger.downloadShare')}
+                    </Button>
                   </div>
-                  <div className="flex items-center space-x-3 p-4 rounded-xl border border-white/20 hover:border-hermes transition-colors cursor-pointer bg-black/30">
-                    <RadioGroupItem value="female" id="female" />
-                    <Label htmlFor="female" className="cursor-pointer flex-1 text-white">{t('styleChanger.female')}</Label>
-                  </div>
-                </RadioGroup>
+                </div>
               </div>
-
-              {/* Submit Button */}
-              <Button
-                id="transform-style-button"
-                onClick={handleSubmit}
-                disabled={!selectedImage || !gender || isLoading}
-                className="w-full h-auto min-h-12 text-base bg-gradient-to-r from-primary to-orange-400 hover:from-orange-500 hover:to-primary text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-300"
-              >
-                {isLoading ? (
-                  <div className="flex flex-col items-center py-2 gap-1">
-                    <span className="font-semibold">We are changing you. {Math.floor(progress)}%</span>
-                    <span className="text-sm font-normal">(Estimated time: 1 min 30 sec)</span>
-                    <span className="text-sm font-normal animate-pulse mt-1">✨ {progressMessage}</span>
-                  </div>
-                ) : "Transform My Style"}
-              </Button>
-            </div>
-            </div>
+            )}
           </div>
         </div>
-
-        {/* Result Display */}
-        {resultImage && (
-          <div className="mt-12 relative group">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-orange-400 bg-clip-text text-transparent">
-                Your New Style
-              </h3>
-              <p className="text-muted-foreground mt-2">Here's your transformed look!</p>
-            </div>
-            <div className="w-full">
-              <img
-                src={resultImage}
-                alt="Style transformation result"
-                className="w-full h-auto shadow-2xl"
-              />
-              {resultText && (
-                <div className="mt-6 p-6 bg-black/40 border border-white/10 rounded-2xl backdrop-blur-md">
-                  <p className="text-white text-center text-lg">{resultText}</p>
-                </div>
-              )}
-              
-              {/* Action Buttons */}
-              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                <Button
-                  onClick={() => {
-                    document.getElementById('transform-style-button')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }}
-                  className="bg-gradient-to-r from-primary to-orange-400 hover:from-orange-500 hover:to-primary text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-300"
-                  size="lg"
-                >
-                  {t('styleChanger.tryAgain')}
-                </Button>
-                <Button
-                  onClick={() => {
-                    const tryOnSection = document.querySelector('[data-section="virtual-tryon"]');
-                    tryOnSection?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="bg-gradient-to-r from-primary to-orange-400 hover:from-orange-500 hover:to-primary text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-300"
-                  size="lg"
-                >
-                  {t('styleChanger.trySpecific')}
-                </Button>
-                <Button
-                  onClick={() => {
-                    const link = document.createElement('a');
-                    link.href = resultImage;
-                    link.download = 'style-transformation.jpg';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                  }}
-                  className="bg-gradient-to-r from-primary to-orange-400 hover:from-orange-500 hover:to-primary text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-300"
-                  size="lg"
-                >
-                  {t('styleChanger.downloadShare')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </section>
+      </section>
     </>
   );
 };

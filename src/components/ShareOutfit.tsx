@@ -12,7 +12,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useNativeCamera } from '@/hooks/useNativeCamera';
 
-const ShareOutfit = () => {
+interface ShareOutfitProps {
+  onSuccess?: () => void;
+}
+
+const ShareOutfit = ({ onSuccess }: ShareOutfitProps) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -82,7 +86,7 @@ const ShareOutfit = () => {
       const fileExt = image.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
-      
+
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('outfit-images')
         .upload(filePath, image);
@@ -118,6 +122,11 @@ const ShareOutfit = () => {
       setTags([]);
       setImage(null);
       setImagePreview(null);
+
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error: any) {
       toast({
         title: t('community.shareFail'),

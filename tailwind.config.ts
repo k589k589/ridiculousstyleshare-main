@@ -64,7 +64,8 @@ export default {
         "warm-gray": "hsl(var(--warm-gray))",
       },
       fontFamily: {
-        inter: ['Inter', 'sans-serif'],
+        inter: ['Inter', '"Noto Sans TC"', 'sans-serif'],
+        noto: ['"Noto Sans TC"', 'Inter', 'sans-serif'],
         playfair: ['Playfair Display', 'serif'],
         bebas: ['Bebas Neue', 'sans-serif'],
       },

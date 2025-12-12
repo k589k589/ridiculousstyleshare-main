@@ -92,7 +92,7 @@ const TrendingPosts = () => {
       }
 
       setTrendingOutfits(outfitsWithProfiles);
-      
+
       if (outfitsWithProfiles.length > 0) {
         for (const outfit of outfitsWithProfiles) {
           await supabase.rpc('increment_trending_count', {
@@ -114,7 +114,7 @@ const TrendingPosts = () => {
 
   const handleLike = async (outfitId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (!user) {
       toast({
         title: t('auth.loginRequired'),
@@ -130,8 +130,8 @@ const TrendingPosts = () => {
     const newIsLiked = !outfit.is_liked;
     const newLikesCount = newIsLiked ? outfit.likes_count + 1 : outfit.likes_count - 1;
 
-    setTrendingOutfits(prev => prev.map(o => 
-      o.id === outfitId 
+    setTrendingOutfits(prev => prev.map(o =>
+      o.id === outfitId
         ? { ...o, is_liked: newIsLiked, likes_count: newLikesCount }
         : o
     ));
@@ -155,8 +155,8 @@ const TrendingPosts = () => {
         await supabase.rpc('decrement_outfit_likes', { outfit_id: outfitId });
       }
     } catch (error: any) {
-      setTrendingOutfits(prev => prev.map(o => 
-        o.id === outfitId 
+      setTrendingOutfits(prev => prev.map(o =>
+        o.id === outfitId
           ? { ...o, is_liked: !newIsLiked, likes_count: outfit.likes_count }
           : o
       ));
@@ -174,8 +174,8 @@ const TrendingPosts = () => {
   };
 
   const handleLikeChange = (outfitId: string, isLiked: boolean) => {
-    setTrendingOutfits(prev => prev.map(o => 
-      o.id === outfitId 
+    setTrendingOutfits(prev => prev.map(o =>
+      o.id === outfitId
         ? { ...o, is_liked: isLiked, likes_count: isLiked ? o.likes_count + 1 : o.likes_count - 1 }
         : o
     ));
@@ -224,15 +224,15 @@ const TrendingPosts = () => {
           {trendingOutfits.map((outfit, index) => (
             <div key={outfit.id} className="relative">
               {/* Trending badge */}
-              <Badge 
+              <Badge
                 className="absolute top-2 right-2 z-10 bg-gradient-to-r from-primary to-orange-400 text-white border-0"
                 variant="default"
               >
                 #{index + 1}
               </Badge>
-              
+
               <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div 
+                <div
                   className="relative cursor-pointer group"
                   onClick={() => handleOpenDetail(outfit)}
                 >
@@ -251,10 +251,10 @@ const TrendingPosts = () => {
                     />
                   </AspectRatio>
                 </div>
-                
+
                 <CardContent className="p-3">
                   {/* User Info */}
-                  <div 
+                  <div
                     className="flex items-center gap-2 mb-2 cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -317,12 +317,41 @@ const TrendingPosts = () => {
                         <MessageCircle className="h-3 w-3 text-muted-foreground" />
                         <span className="text-xs">{outfit.comments_count || 0}</span>
                       </Button>
-                      {outfit.try_count && outfit.try_count > 0 && (
-                        <div className="flex items-center gap-1 px-2">
-                          <Shirt className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">{outfit.try_count}</span>
-                        </div>
-                      )}
+                      {(() => {
+                        const count = outfit.try_count || 0;
+                        let bgColor, textColor, borderColor;
+                        if (count === 0) {
+                          bgColor = 'from-blue-500/20 to-blue-400/10';
+                          textColor = 'text-blue-400';
+                          borderColor = 'border-blue-400/30';
+                        } else if (count < 5) {
+                          bgColor = 'from-cyan-500/20 to-cyan-400/10';
+                          textColor = 'text-cyan-400';
+                          borderColor = 'border-cyan-400/30';
+                        } else if (count < 10) {
+                          bgColor = 'from-green-500/20 to-green-400/10';
+                          textColor = 'text-green-400';
+                          borderColor = 'border-green-400/30';
+                        } else if (count < 20) {
+                          bgColor = 'from-yellow-500/20 to-yellow-400/10';
+                          textColor = 'text-yellow-400';
+                          borderColor = 'border-yellow-400/30';
+                        } else if (count < 50) {
+                          bgColor = 'from-orange-500/20 to-orange-400/10';
+                          textColor = 'text-orange-400';
+                          borderColor = 'border-orange-400/30';
+                        } else {
+                          bgColor = 'from-red-500/20 to-red-400/10';
+                          textColor = 'text-red-400';
+                          borderColor = 'border-red-400/30';
+                        }
+                        return (
+                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r ${bgColor} border ${borderColor}`}>
+                            <Shirt className={`h-3 w-3 ${textColor}`} />
+                            <span className={`text-xs font-medium ${textColor}`}>{count}</span>
+                          </div>
+                        );
+                      })()}
                       <Button
                         variant="outline"
                         size="sm"
@@ -348,7 +377,7 @@ const TrendingPosts = () => {
           ))}
         </div>
       </CardContent>
-      
+
       <OutfitDetailDialog
         isOpen={detailOpen}
         onClose={() => setDetailOpen(false)}
@@ -375,11 +404,11 @@ const TrendingPosts = () => {
                 } catch (error) {
                   console.error('Error incrementing try count:', error);
                 }
-                
-                navigate('/better-than-model', { 
-                  state: { 
-                    preloadedClothingImage: tryOnConfirmDialog.outfit.image_url 
-                  } 
+
+                navigate('/better-than-model', {
+                  state: {
+                    preloadedClothingImage: tryOnConfirmDialog.outfit.image_url
+                  }
                 });
               }
               setTryOnConfirmDialog({ open: false, outfit: null });

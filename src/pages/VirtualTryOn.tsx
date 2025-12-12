@@ -19,6 +19,7 @@ import resultCase2 from "@/assets/result-case2.jpg";
 import personCase3Basketball from "@/assets/person-case3-basketball.jpg";
 import clothingCase3Basketball from "@/assets/clothing-case3-basketball.png";
 import resultCase3Basketball from "@/assets/result-case3-basketball.jpg";
+import rssWatermark from "@/assets/rss-watermark.png";
 
 const VirtualTryOn = () => {
   const [bodyPhoto, setBodyPhoto] = useState<File | null>(null);
@@ -32,7 +33,8 @@ const VirtualTryOn = () => {
   const [isLoadingCount, setIsLoadingCount] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isVip, setIsVip] = useState(false);
-  
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
+
   const bodyInputRef = useRef<HTMLInputElement>(null);
   const clothingInputRef = useRef<HTMLInputElement>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -93,6 +95,29 @@ const VirtualTryOn = () => {
         if (error) throw error;
 
         setTryonsCount(data?.tryons_count || 0);
+
+        // Fetch user avatar for auto-populate
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (profileData?.avatar_url) {
+          setUserAvatarUrl(profileData.avatar_url);
+          // Auto-set avatar as body preview if user has no body photo yet
+          setBodyPreview(profileData.avatar_url);
+          // Create a File object from the avatar URL for the actual upload
+          try {
+            const response = await fetch(profileData.avatar_url);
+            const blob = await response.blob();
+            const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+            setBodyPhoto(file);
+          } catch (avatarError) {
+            console.warn('Could not fetch avatar as file:', avatarError);
+            // Still show preview even if file creation fails
+          }
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
       } finally {
@@ -349,10 +374,10 @@ const VirtualTryOn = () => {
 
     try {
       console.log('開始發送請求到:', WEBHOOK_URL);
-      
+
       // 檢查URL是否可訪問
       try {
-        const testResponse = await fetch(WEBHOOK_URL, { 
+        const testResponse = await fetch(WEBHOOK_URL, {
           method: 'HEAD',
           mode: 'no-cors' // 避免CORS問題的預檢
         });
@@ -401,12 +426,12 @@ const VirtualTryOn = () => {
         const blob = await response.blob();
         const objUrl = URL.createObjectURL(blob);
         setResultImage(objUrl);
-        
+
         // Increment tryon count
         const newCount = await incrementTryonCount();
-        
-        toast({ 
-          title: t('virtualTryOn.tryonSuccess'), 
+
+        toast({
+          title: t('virtualTryOn.tryonSuccess'),
           description: t('virtualTryOn.tryonSuccessDesc')
             .replace('{remaining}', (MAX_TRYONS - newCount).toString())
             .replace('{total}', MAX_TRYONS.toString())
@@ -418,22 +443,22 @@ const VirtualTryOn = () => {
 
       // Empty body -> start polling
       if (!responseText || responseText.trim() === '') {
-      const imgUrl = await pollForResult(endpoint);
-      setProgress(100);
-      setTimeout(async () => {
-        setResultImage(imgUrl);
-        
-        // Increment tryon count
-        const newCount = await incrementTryonCount();
-        
-        toast({ 
-          title: t('virtualTryOn.tryonSuccess'), 
-          description: t('virtualTryOn.tryonSuccessDesc')
-            .replace('{remaining}', (MAX_TRYONS - newCount).toString())
-            .replace('{total}', MAX_TRYONS.toString())
-        });
-        if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-      }, 300);
+        const imgUrl = await pollForResult(endpoint);
+        setProgress(100);
+        setTimeout(async () => {
+          setResultImage(imgUrl);
+
+          // Increment tryon count
+          const newCount = await incrementTryonCount();
+
+          toast({
+            title: t('virtualTryOn.tryonSuccess'),
+            description: t('virtualTryOn.tryonSuccessDesc')
+              .replace('{remaining}', (MAX_TRYONS - newCount).toString())
+              .replace('{total}', MAX_TRYONS.toString())
+          });
+          if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+        }, 300);
         return;
       }
 
@@ -443,12 +468,12 @@ const VirtualTryOn = () => {
         setProgress(100);
         setTimeout(async () => {
           setResultImage(trimmed);
-          
+
           // Increment tryon count
           const newCount = await incrementTryonCount();
-          
-          toast({ 
-            title: t('virtualTryOn.tryonSuccess'), 
+
+          toast({
+            title: t('virtualTryOn.tryonSuccess'),
             description: t('virtualTryOn.tryonSuccessDesc')
               .replace('{remaining}', (MAX_TRYONS - newCount).toString())
               .replace('{total}', MAX_TRYONS.toString())
@@ -473,12 +498,12 @@ const VirtualTryOn = () => {
         setProgress(100);
         setTimeout(async () => {
           setResultImage(imgFromJson);
-          
+
           // Increment tryon count
           const newCount = await incrementTryonCount();
-          
-          toast({ 
-            title: t('virtualTryOn.tryonSuccess'), 
+
+          toast({
+            title: t('virtualTryOn.tryonSuccess'),
             description: t('virtualTryOn.tryonSuccessDesc')
               .replace('{remaining}', (MAX_TRYONS - newCount).toString())
               .replace('{total}', MAX_TRYONS.toString())
@@ -494,12 +519,12 @@ const VirtualTryOn = () => {
         setProgress(100);
         setTimeout(async () => {
           setResultImage(imgUrl);
-          
+
           // Increment tryon count
           const newCount = await incrementTryonCount();
-          
-          toast({ 
-            title: t('virtualTryOn.tryonSuccess'), 
+
+          toast({
+            title: t('virtualTryOn.tryonSuccess'),
             description: t('virtualTryOn.tryonSuccessDesc')
               .replace('{remaining}', (MAX_TRYONS - newCount).toString())
               .replace('{total}', MAX_TRYONS.toString())
@@ -522,9 +547,9 @@ const VirtualTryOn = () => {
         errorName: error instanceof Error ? error.name : 'Unknown',
         webhookUrl: WEBHOOK_URL
       });
-      
+
       let errorMessage = '處理失敗，請重試';
-      
+
       if (error instanceof Error) {
         // 檢查不同類型的錯誤
         if (error.message.toLowerCase().includes('fetch')) {
@@ -537,7 +562,7 @@ const VirtualTryOn = () => {
           errorMessage = error.message;
         }
       }
-      
+
       toast({
         title: t('virtualTryOn.processingFailed'),
         description: errorMessage,
@@ -590,7 +615,7 @@ const VirtualTryOn = () => {
         t('virtualTryOn.shareDescription'),
         resultImage
       );
-      
+
       if (shared) {
         toast({
           title: t('virtualTryOn.shareSuccess'),
@@ -609,12 +634,12 @@ const VirtualTryOn = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,15%,15%)] via-[hsl(210,20%,8%)] to-[hsl(220,20%,5%)]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_80%,rgba(197,149,96,0.08),transparent_50%)]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.02),transparent_50%)]"></div>
-      
+
       {/* Subtle texture overlay */}
       <div className="absolute inset-0 opacity-30" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
       }}></div>
-      
+
       <div className="relative z-10 py-20 px-4">
         <div className="max-w-7xl mx-auto px-0">
           {/* Premium Header */}
@@ -623,7 +648,7 @@ const VirtualTryOn = () => {
               <h1 className="font-playfair text-5xl md:text-7xl font-bold text-white mb-4 relative z-10">
                 {t('virtualTryOn.title')}
               </h1>
-              
+
               {/* Usage Counter */}
               {user && !isLoadingCount && (
                 <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
@@ -640,13 +665,12 @@ const VirtualTryOn = () => {
                   ) : (
                     <>
                       <span className="text-white/70 text-sm">{t('virtualTryOn.remainingTryons')}</span>
-                      <span className={`text-lg font-bold ${
-                        tryonsCount >= MAX_TRYONS 
-                          ? 'text-red-400' 
-                          : tryonsCount >= MAX_TRYONS * 0.8 
-                            ? 'text-yellow-400'
-                            : 'text-[#FF6B35]'
-                      }`}>
+                      <span className={`text-lg font-bold ${tryonsCount >= MAX_TRYONS
+                        ? 'text-red-400'
+                        : tryonsCount >= MAX_TRYONS * 0.8
+                          ? 'text-yellow-400'
+                          : 'text-[#FF6B35]'
+                        }`}>
                         {MAX_TRYONS - tryonsCount} / {MAX_TRYONS}
                       </span>
                     </>
@@ -672,22 +696,22 @@ const VirtualTryOn = () => {
             {/* Body Photo Upload */}
             <div className="group relative overflow-hidden bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-2xl shadow-[0_40px_120px_-20px_rgba(0,0,0,0.6)] hover:shadow-[0_50px_150px_-20px_rgba(197,149,96,0.4)] transition-all duration-700 hover:-translate-y-3 hover:scale-[1.02] rounded-lg">
               {/* Background Image */}
-              <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20 group-hover:opacity-30 transition-opacity duration-500" 
-                   style={{backgroundImage: `url('/lovable-uploads/5acdebbb-cca2-43d2-860a-65f67ab9fdf7.png')`}}></div>
-              
+              <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20 group-hover:opacity-30 transition-opacity duration-500"
+                style={{ backgroundImage: `url('/lovable-uploads/5acdebbb-cca2-43d2-860a-65f67ab9fdf7.png')` }}></div>
+
               {/* Dark overlay for better text readability */}
               <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60"></div>
-              
+
               {/* Animated gradient border */}
               <div className="absolute -inset-[1px] bg-gradient-to-r from-[hsl(45,60%,50%,0.3)] via-transparent to-[hsl(45,60%,50%,0.3)] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              
+
               {/* Floating orbs */}
               <div className="absolute top-6 right-6 w-3 h-3 bg-[hsl(45,60%,50%)] rounded-full animate-pulse opacity-60 z-10"></div>
               <div className="absolute bottom-6 left-6 w-2 h-2 bg-[hsl(45,80%,60%)] rounded-full animate-pulse opacity-40 delay-300 z-10"></div>
-              
+
               {/* Subtle glass effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-[hsl(45,20%,25%,0.08)] to-[hsl(45,40%,35%,0.03)] rounded-lg backdrop-blur-sm"></div>
-              
+
               <div className="text-center relative z-10 pb-6">
                 <h3 className="text-2xl font-playfair text-white mb-2 group-hover:text-[hsl(45,60%,50%)] transition-colors duration-300">
                   {t('virtualTryOn.personalPhoto')}
@@ -696,9 +720,9 @@ const VirtualTryOn = () => {
                   {t('virtualTryOn.uploadPhoto')}
                 </p>
               </div>
-              
+
               <div className="space-y-6 relative z-10 px-6">
-                <div 
+                <div
                   className="relative border-2 border-dashed border-white/25 rounded-2xl p-8 text-center cursor-pointer hover:border-[hsl(45,60%,50%,0.6)] hover:bg-gradient-to-br hover:from-[hsl(45,60%,50%,0.05)] hover:to-[hsl(45,80%,60%,0.03)] transition-all duration-500 group-hover:border-[hsl(45,60%,50%,0.4)] overflow-hidden"
                   onClick={() => bodyInputRef.current?.click()}
                   onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-[hsl(45,60%,50%)]', 'bg-[hsl(45,60%,50%,0.05)]'); }}
@@ -712,7 +736,7 @@ const VirtualTryOn = () => {
                 >
                   {/* Shimmer effect */}
                   <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/5 to-transparent group-hover:translate-x-full transition-transform duration-1000"></div>
-                  
+
                   {bodyPreview ? (
                     <>
                       <img
@@ -722,12 +746,12 @@ const VirtualTryOn = () => {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
                       <div className="absolute inset-0 bg-gradient-to-br from-[hsl(45,60%,50%,0.1)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                      
+
                       {/* Success badge */}
                       <div className="absolute top-4 right-4 bg-gradient-to-r from-[hsl(45,60%,50%)] to-[hsl(45,80%,60%)] text-black px-4 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
                         {t('upload.completed')}
                       </div>
-                      
+
                       {/* Overlay info */}
                       <div className="absolute bottom-4 left-4 right-4 bg-black/30 backdrop-blur-sm rounded-xl p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <p className="text-white text-sm font-medium">{t('upload.clickToReselect')}</p>
@@ -752,7 +776,7 @@ const VirtualTryOn = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <input
                   ref={bodyInputRef}
                   type="file"
@@ -760,9 +784,9 @@ const VirtualTryOn = () => {
                   onChange={handleBodyUpload}
                   className="hidden"
                 />
-                
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
                   className="w-full bg-gradient-to-r from-gray-700/90 to-gray-600/90 border-gray-500/50 text-white hover:bg-gradient-to-r hover:from-gray-600/90 hover:to-gray-500/90 hover:border-gray-400/60 hover:text-white backdrop-blur-xl h-14 text-lg font-medium transition-all duration-500 rounded-2xl shadow-lg hover:shadow-[0_0_30px_rgba(100,100,100,0.3)] group"
                   onClick={() => bodyInputRef.current?.click()}
                 >
@@ -774,22 +798,22 @@ const VirtualTryOn = () => {
             {/* Clothing Photo Upload */}
             <div className="group relative overflow-hidden bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-2xl shadow-[0_40px_120px_-20px_rgba(0,0,0,0.6)] hover:shadow-[0_50px_150px_-20px_rgba(139,69,19,0.4)] transition-all duration-700 hover:-translate-y-3 hover:scale-[1.02] rounded-lg">
               {/* Background Image */}
-              <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-25 group-hover:opacity-35 transition-opacity duration-500" 
-                   style={{backgroundImage: `url('/lovable-uploads/2c9565ef-37a9-420c-a328-4f4331bfaeb9.png')`}}></div>
-              
+              <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-25 group-hover:opacity-35 transition-opacity duration-500"
+                style={{ backgroundImage: `url('/lovable-uploads/2c9565ef-37a9-420c-a328-4f4331bfaeb9.png')` }}></div>
+
               {/* Dark overlay for better text readability */}
               <div className="absolute inset-0 bg-gradient-to-br from-amber-950/70 via-amber-900/50 to-amber-950/70"></div>
-              
+
               {/* Animated gradient border */}
               <div className="absolute -inset-[1px] bg-gradient-to-r from-[hsl(30,50%,40%,0.3)] via-transparent to-[hsl(30,50%,40%,0.3)] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              
+
               {/* Floating orbs */}
               <div className="absolute top-6 right-6 w-3 h-3 bg-[hsl(30,50%,50%)] rounded-full animate-pulse opacity-60 z-10"></div>
               <div className="absolute bottom-6 left-6 w-2 h-2 bg-amber-300 rounded-full animate-pulse opacity-40 delay-300 z-10"></div>
-              
+
               {/* Subtle glass effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-[hsl(30,25%,25%,0.08)] to-[hsl(30,30%,35%,0.03)] rounded-lg backdrop-blur-sm"></div>
-              
+
               <div className="text-center relative z-10 pb-6">
                 <h3 className="text-2xl font-playfair text-white mb-2 group-hover:text-[hsl(30,60%,60%)] transition-colors duration-300">
                   {t('virtualTryOn.fashionItems')}
@@ -798,25 +822,25 @@ const VirtualTryOn = () => {
                   {t('virtualTryOn.selectOutfit')}
                 </p>
               </div>
-              
+
               <div className="space-y-6 relative z-10 px-6">
-                  <div
-                    onClick={() => clothingInputRef.current?.click()}
-                    className="border-2 border-dashed border-white/10 rounded-lg p-8 text-center cursor-pointer hover:border-[hsl(30,50%,50%)] transition-colors bg-white/5 backdrop-blur-sm"
-                  >
-                    {clothingPreview ? (
-                      <img
-                        src={clothingPreview}
-                        alt="Clothing"
-                        className="max-h-64 mx-auto rounded-lg"
-                      />
-                    ) : (
-                      <div className="space-y-2">
-                        <p className="text-white/60">點擊上傳照片</p>
-                      </div>
-                    )}
-                  </div>
-                
+                <div
+                  onClick={() => clothingInputRef.current?.click()}
+                  className="border-2 border-dashed border-white/10 rounded-lg p-8 text-center cursor-pointer hover:border-[hsl(30,50%,50%)] transition-colors bg-white/5 backdrop-blur-sm"
+                >
+                  {clothingPreview ? (
+                    <img
+                      src={clothingPreview}
+                      alt="Clothing"
+                      className="max-h-64 mx-auto rounded-lg"
+                    />
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-white/60">點擊上傳照片</p>
+                    </div>
+                  )}
+                </div>
+
                 <input
                   ref={clothingInputRef}
                   type="file"
@@ -824,9 +848,9 @@ const VirtualTryOn = () => {
                   onChange={handleClothingUpload}
                   className="hidden"
                 />
-                
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
                   className="w-full bg-gradient-to-r from-gray-700/90 to-gray-600/90 border-gray-500/50 text-white hover:bg-gradient-to-r hover:from-gray-600/90 hover:to-gray-500/90 hover:border-gray-400/60 hover:text-white backdrop-blur-xl h-14 text-lg font-medium transition-all duration-500 rounded-2xl shadow-lg hover:shadow-[0_0_30px_rgba(100,100,100,0.3)] group"
                   onClick={() => clothingInputRef.current?.click()}
                 >
@@ -854,15 +878,15 @@ const VirtualTryOn = () => {
                 <span>Try New Item</span>
               )}
             </Button>
-            
+
             {resultImage && (
               <div className="mt-8">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="bg-gray-700/70 border-gray-500/40 text-white hover:bg-gray-600/80 hover:border-gray-400/50 backdrop-blur-sm h-12 px-8 text-base font-medium transition-all duration-300"
                   onClick={downloadResult}
                 >
-                      {t('tryOn.downloadWork')}
+                  {t('tryOn.downloadWork')}
                 </Button>
               </div>
             )}
@@ -870,49 +894,46 @@ const VirtualTryOn = () => {
 
           {/* Result Section - moved here */}
           {resultImage && (
-            <div className="mb-20">
-              <div className="relative bg-gradient-to-br from-white/3 to-white/1 backdrop-blur-xl rounded-3xl p-12 border border-white/5 shadow-[0_25px_80px_-20px_rgba(0,0,0,0.4)]">
-                <div className="text-center mb-12">
-                <h3 className="font-playfair text-4xl md:text-5xl font-bold text-white mb-6">
-                  {t('virtualTryOn.result')}
-                </h3>
-                  <p className="text-xl text-white/60 max-w-2xl mx-auto">
+            <div className="mb-12 md:mb-20">
+              <div className="relative bg-gradient-to-br from-white/3 to-white/1 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 md:p-12 border border-white/5 shadow-[0_25px_80px_-20px_rgba(0,0,0,0.4)]">
+                <div className="text-center mb-6 md:mb-12">
+                  <h3 className="font-playfair text-2xl md:text-5xl font-bold text-white mb-3 md:mb-6">
+                    {t('virtualTryOn.result')}
+                  </h3>
+                  <p className="text-base md:text-xl text-white/60 max-w-2xl mx-auto">
                     {t('tryOn.perfectResult')}
                   </p>
                 </div>
-                
-                 <div className="max-w-none w-full mx-auto">
-                   <div className="relative group rounded-3xl overflow-hidden">
-                     <img
-                       src={resultImage}
-                       alt="Virtual try-on result"
-                       className="w-full h-[900px] object-cover rounded-2xl transition-transform duration-500 group-hover:scale-105"
-                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent rounded-2xl"></div>
-                    <div className="absolute inset-0 bg-gradient-to-br from-[hsl(45,60%,50%,0.15)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
-                    
-                    {/* Premium badge */}
-                    <div className="absolute top-6 right-6 bg-gradient-to-r from-[hsl(45,60%,50%)] to-[hsl(45,80%,60%)] rounded-full p-3 shadow-[0_0_30px_rgba(197,149,96,0.6)]">
-                    </div>
-                    
-                    {/* Success message */}
-                    <div className="absolute bottom-6 left-6 bg-gradient-to-r from-[hsl(45,60%,50%)] to-[hsl(45,80%,60%)] backdrop-blur-md rounded-full px-6 py-3 text-black font-bold shadow-[0_10px_40px_rgba(197,149,96,0.4)]">
-                      {t('tryOn.tryOnCompleted')}
-                    </div>
+
+                <div className="max-w-none w-full mx-auto">
+                  <div className="relative group rounded-2xl md:rounded-3xl overflow-hidden">
+                    <img
+                      src={resultImage}
+                      alt="Virtual try-on result"
+                      className="w-full max-h-[75vh] md:max-h-[70vh] object-contain rounded-xl md:rounded-2xl transition-transform duration-500 group-hover:scale-[1.02]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent rounded-xl md:rounded-2xl pointer-events-none"></div>
+
+                    {/* RSS Logo Watermark - bottom right */}
+                    <img
+                      src={rssWatermark}
+                      alt="RSS"
+                      className="absolute bottom-3 right-3 md:bottom-6 md:right-6 w-10 h-auto md:w-14 opacity-70"
+                    />
                   </div>
-                  
+
                   <div className="mt-8 text-center">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="bg-gradient-to-r from-[hsl(45,60%,50%)] to-[hsl(45,80%,60%)] border-none text-black hover:bg-gradient-to-r hover:from-[hsl(45,60%,60%)] hover:to-[hsl(45,80%,70%)] h-12 px-8 font-medium transition-all duration-300"
                       onClick={downloadResult}
                     >
                       {t('tryOn.downloadWork')}
                     </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
           )}
 
           {/* Luxury Success Cases */}
@@ -935,7 +956,7 @@ const VirtualTryOn = () => {
                   <div className="h-px w-12 bg-gradient-to-l from-transparent to-[hsl(45,60%,50%)]"></div>
                 </div>
               </div>
-              
+
               {/* Case 1 Title */}
               <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-3 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-xl rounded-full px-6 py-3 border border-white/10">
@@ -949,8 +970,8 @@ const VirtualTryOn = () => {
                 <div className="group text-center">
                   <div className="relative overflow-hidden rounded-2xl mb-6 transform transition-all duration-700 hover:scale-105 hover:-rotate-1">
                     <div className="aspect-[2/3] bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-sm border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden">
-                      <img 
-                        src={personCase1New} 
+                      <img
+                        src={personCase1New}
                         alt="原始全身照"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -963,12 +984,12 @@ const VirtualTryOn = () => {
                   <h4 className="font-playfair text-xl font-bold text-white mb-2">{t('case.professionalPhoto')}</h4>
                   <p className="text-white/50">{t('case.highQualityPhoto')}</p>
                 </div>
-                
+
                 <div className="group text-center">
                   <div className="relative overflow-hidden rounded-2xl mb-6 transform transition-all duration-700 hover:scale-105 hover:-rotate-1">
                     <div className="aspect-[2/3] bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-sm border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden">
-                      <img 
-                        src={clothingCase1New} 
+                      <img
+                        src={clothingCase1New}
                         alt="衣物照片"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -981,12 +1002,12 @@ const VirtualTryOn = () => {
                   <h4 className="font-playfair text-xl font-bold text-white mb-2">{t('case.fashionItem')}</h4>
                   <p className="text-white/50">{t('case.carefullySelected')}</p>
                 </div>
-                
+
                 <div className="group text-center">
                   <div className="relative overflow-hidden rounded-2xl mb-6 transform transition-all duration-700 hover:scale-105 hover:rotate-1">
                     <div className="aspect-[2/3] bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-sm border border-[hsl(45,60%,50%,0.3)] shadow-[0_20px_60px_-15px_rgba(197,149,96,0.4)] overflow-hidden">
-                      <img 
-                        src={resultCase1New} 
+                      <img
+                        src={resultCase1New}
                         alt="試穿結果"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -1014,8 +1035,8 @@ const VirtualTryOn = () => {
                 <div className="group text-center">
                   <div className="relative overflow-hidden rounded-2xl mb-6 transform transition-all duration-700 hover:scale-105 hover:-rotate-1">
                     <div className="aspect-[2/3] bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-sm border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden">
-                      <img 
-                        src={personCase2} 
+                      <img
+                        src={personCase2}
                         alt="原始全身照"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -1028,12 +1049,12 @@ const VirtualTryOn = () => {
                   <h4 className="font-playfair text-xl font-bold text-white mb-2">{t('case.professionalPhoto')}</h4>
                   <p className="text-white/50">{t('case.highQualityPhoto')}</p>
                 </div>
-                
+
                 <div className="group text-center">
                   <div className="relative overflow-hidden rounded-2xl mb-6 transform transition-all duration-700 hover:scale-105 hover:-rotate-1">
                     <div className="aspect-[2/3] bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-sm border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden">
-                      <img 
-                        src={clothingCase2} 
+                      <img
+                        src={clothingCase2}
                         alt="衣物照片"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -1046,12 +1067,12 @@ const VirtualTryOn = () => {
                   <h4 className="font-playfair text-xl font-bold text-white mb-2">{t('case.fashionItem')}</h4>
                   <p className="text-white/50">{t('case.carefullySelected')}</p>
                 </div>
-                
+
                 <div className="group text-center">
                   <div className="relative overflow-hidden rounded-2xl mb-6 transform transition-all duration-700 hover:scale-105 hover:rotate-1">
                     <div className="aspect-[2/3] bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-sm border border-[hsl(45,60%,50%,0.3)] shadow-[0_20px_60px_-15px_rgba(197,149,96,0.4)] overflow-hidden">
-                      <img 
-                        src={resultCase2} 
+                      <img
+                        src={resultCase2}
                         alt="試穿結果"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -1078,8 +1099,8 @@ const VirtualTryOn = () => {
                 <div className="group text-center">
                   <div className="relative overflow-hidden rounded-2xl mb-6 transform transition-all duration-700 hover:scale-105 hover:-rotate-1">
                     <div className="aspect-[2/3] bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-sm border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden">
-                      <img 
-                        src={personCase3Basketball} 
+                      <img
+                        src={personCase3Basketball}
                         alt="原始全身照"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -1092,12 +1113,12 @@ const VirtualTryOn = () => {
                   <h4 className="font-playfair text-xl font-bold text-white mb-2">{t('case.professionalPhoto')}</h4>
                   <p className="text-white/50">{t('case.highQualityPhoto')}</p>
                 </div>
-                
+
                 <div className="group text-center">
                   <div className="relative overflow-hidden rounded-2xl mb-6 transform transition-all duration-700 hover:scale-105 hover:-rotate-1">
                     <div className="aspect-[2/3] bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-sm border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden">
-                      <img 
-                        src={clothingCase3Basketball} 
+                      <img
+                        src={clothingCase3Basketball}
                         alt="衣物照片"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -1110,12 +1131,12 @@ const VirtualTryOn = () => {
                   <h4 className="font-playfair text-xl font-bold text-white mb-2">{t('case.fashionItem')}</h4>
                   <p className="text-white/50">{t('case.carefullySelected')}</p>
                 </div>
-                
+
                 <div className="group text-center">
                   <div className="relative overflow-hidden rounded-2xl mb-6 transform transition-all duration-700 hover:scale-105 hover:rotate-1">
                     <div className="aspect-[2/3] bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-sm border border-[hsl(45,60%,50%,0.3)] shadow-[0_20px_60px_-15px_rgba(197,149,96,0.4)] overflow-hidden">
-                      <img 
-                        src={resultCase3Basketball} 
+                      <img
+                        src={resultCase3Basketball}
                         alt="試穿結果"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -1142,8 +1163,8 @@ const VirtualTryOn = () => {
                 <div className="group text-center">
                   <div className="relative overflow-hidden rounded-2xl mb-6 transform transition-all duration-700 hover:scale-105 hover:-rotate-1">
                     <div className="aspect-[2/3] bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-sm border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden">
-                      <img 
-                        src="https://v3.fal.media/files/lion/rgO4qXLvlehiq3V6sV1ND_ChatGPT%20Image%202025%3F8%3F13%3F%20%3F%3F09_40_30.png" 
+                      <img
+                        src="https://v3.fal.media/files/lion/rgO4qXLvlehiq3V6sV1ND_ChatGPT%20Image%202025%3F8%3F13%3F%20%3F%3F09_40_30.png"
                         alt="原始全身照"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -1156,12 +1177,12 @@ const VirtualTryOn = () => {
                   <h4 className="font-playfair text-xl font-bold text-white mb-2">{t('case.professionalPhoto')}</h4>
                   <p className="text-white/50">{t('case.highQualityPhoto')}</p>
                 </div>
-                
+
                 <div className="group text-center">
                   <div className="relative overflow-hidden rounded-2xl mb-6 transform transition-all duration-700 hover:scale-105 hover:-rotate-1">
                     <div className="aspect-[2/3] bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-sm border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden">
-                      <img 
-                        src="https://v3.fal.media/files/panda/-LuB69UoIu110u_m_GjkM_file%20(5).png" 
+                      <img
+                        src="https://v3.fal.media/files/panda/-LuB69UoIu110u_m_GjkM_file%20(5).png"
                         alt="配件照片"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -1174,12 +1195,12 @@ const VirtualTryOn = () => {
                   <h4 className="font-playfair text-xl font-bold text-white mb-2">{t('case.luxuryItem')}</h4>
                   <p className="text-white/50">{t('case.selectedAccessory')}</p>
                 </div>
-                
+
                 <div className="group text-center">
                   <div className="relative overflow-hidden rounded-2xl mb-6 transform transition-all duration-700 hover:scale-105 hover:rotate-1">
                     <div className="aspect-[2/3] bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-sm border border-[hsl(45,60%,50%,0.3)] shadow-[0_20px_60px_-15px_rgba(197,149,96,0.4)] overflow-hidden">
-                      <img 
-                        src="https://v3.fal.media/files/penguin/PrkCtfbFAn_IgdfI80pnL.jpeg" 
+                      <img
+                        src="https://v3.fal.media/files/penguin/PrkCtfbFAn_IgdfI80pnL.jpeg"
                         alt="試穿結果"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />

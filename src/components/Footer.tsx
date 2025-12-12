@@ -3,7 +3,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 
 const Footer = () => {
   const { t } = useLanguage();
-  
+
   return (
     <footer className="bg-secondary text-secondary-foreground py-16">
       <div className="container">
@@ -41,11 +41,19 @@ const Footer = () => {
 
         <hr className="my-8 border-border" />
 
-        <div className="flex flex-col md:flex-row justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <p className="text-muted-foreground text-sm">
+              {t('footer.copyright')}
+            </p>
+            <a
+              href="/privacy-policy"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors underline"
+            >
+              {t('footer.privacyPolicy') || '隱私政策 / Privacy Policy'}
+            </a>
+          </div>
           <p className="text-muted-foreground text-sm">
-            {t('footer.copyright')}
-          </p>
-          <p className="text-muted-foreground text-sm mt-4 md:mt-0">
             {t('footer.tagline')}
           </p>
         </div>

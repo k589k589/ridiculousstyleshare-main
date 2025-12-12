@@ -60,10 +60,10 @@ const Messages = () => {
     if (selectedConversation && user) {
       fetchMessages(selectedConversation);
       markMessagesAsRead(selectedConversation);
-      
+
       // Subscribe to new messages
       const channel = supabase
-        .channel('messages-channel')
+        .channel(`messages-${selectedConversation}`)
         .on(
           'postgres_changes',
           {
@@ -99,7 +99,7 @@ const Messages = () => {
 
     try {
       setLoading(true);
-      
+
       // Get all conversations user is part of
       const { data: participantData, error: participantError } = await supabase
         .from('conversation_participants')
@@ -109,7 +109,7 @@ const Messages = () => {
       if (participantError) throw participantError;
 
       const conversationIds = participantData.map(p => p.conversation_id);
-      
+
       if (conversationIds.length === 0) {
         setConversations([]);
         setLoading(false);
@@ -285,9 +285,8 @@ const Messages = () => {
                       <button
                         key={conv.id}
                         onClick={() => setSelectedConversation(conv.id)}
-                        className={`w-full p-4 hover:bg-accent/50 transition-colors text-left ${
-                          selectedConversation === conv.id ? 'bg-accent' : ''
-                        }`}
+                        className={`w-full p-4 hover:bg-accent/50 transition-colors text-left ${selectedConversation === conv.id ? 'bg-accent' : ''
+                          }`}
                       >
                         <div className="flex items-center gap-3">
                           <Avatar className="w-12 h-12">
@@ -349,7 +348,7 @@ const Messages = () => {
                     {messages.map((msg) => {
                       const isOwn = msg.sender_id === user.id;
                       const sender = profiles[msg.sender_id];
-                      
+
                       return (
                         <div
                           key={msg.id}
@@ -364,16 +363,14 @@ const Messages = () => {
                             </Avatar>
                           )}
                           <div
-                            className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                              isOwn
+                            className={`max-w-[70%] rounded-2xl px-4 py-2 ${isOwn
                                 ? 'bg-primary text-primary-foreground'
                                 : 'bg-muted'
-                            }`}
+                              }`}
                           >
                             <p className="text-sm leading-relaxed">{msg.content}</p>
-                            <span className={`text-xs mt-1 block ${
-                              isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                            }`}>
+                            <span className={`text-xs mt-1 block ${isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                              }`}>
                               {new Date(msg.created_at).toLocaleTimeString('zh-TW', {
                                 hour: '2-digit',
                                 minute: '2-digit'

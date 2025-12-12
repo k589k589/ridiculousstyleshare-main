@@ -11,11 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import StartConversationButton from '@/components/StartConversationButton';
-import { 
-  UserPlus, 
-  UserMinus, 
-  Settings, 
-  Grid, 
+import {
+  UserPlus,
+  UserMinus,
+  Settings,
+  Grid,
   Bookmark,
   Heart,
   MessageCircle,
@@ -46,7 +46,7 @@ const UserProfile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [outfits, setOutfits] = useState<Outfit[]>([]);
   const [bookmarkedOutfits, setBookmarkedOutfits] = useState<Outfit[]>([]);
@@ -123,7 +123,7 @@ const UserProfile = () => {
 
       if (bookmarks && bookmarks.length > 0) {
         const outfitIds = bookmarks.map(b => b.outfit_id);
-        
+
         const { data: outfitsData, error: outfitsError } = await supabase
           .from('outfits')
           .select('id, title, image_url, likes_count, comments_count, created_at')
@@ -226,39 +226,37 @@ const UserProfile = () => {
   }
 
   const renderOutfitGrid = (outfitsList: Outfit[]) => (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-3 gap-1 md:gap-4">
       {outfitsList.length === 0 ? (
         <div className="col-span-full text-center py-12 text-muted-foreground">
           暫無貼文
         </div>
       ) : (
         outfitsList.map((outfit) => (
-          <Card
+          <div
             key={outfit.id}
-            className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+            className="relative aspect-square cursor-pointer group overflow-hidden bg-muted"
             onClick={() => navigate('/community')}
           >
-            <AspectRatio ratio={1}>
-              <img
-                src={outfit.image_url}
-                alt={outfit.title}
-                className="w-full h-full object-cover"
-              />
-            </AspectRatio>
-            <CardContent className="p-3">
-              <h3 className="font-medium text-sm mb-2 line-clamp-1">{outfit.title}</h3>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Heart className="h-3 w-3" />
-                  {outfit.likes_count}
-                </span>
-                <span className="flex items-center gap-1">
-                  <MessageCircle className="h-3 w-3" />
-                  {outfit.comments_count}
-                </span>
+            <img
+              src={outfit.image_url}
+              alt={outfit.title}
+              loading="lazy"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <div className="flex gap-4 text-white">
+                <div className="flex items-center gap-1">
+                  <Heart className="h-5 w-5" fill="white" />
+                  <span className="font-semibold">{outfit.likes_count}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <MessageCircle className="h-5 w-5" fill="white" />
+                  <span className="font-semibold">{outfit.comments_count}</span>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))
       )}
     </div>
@@ -277,78 +275,77 @@ const UserProfile = () => {
           返回
         </Button>
 
-        {/* Profile Header */}
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-              <Avatar className="h-24 w-24 md:h-32 md:w-32">
-                <AvatarImage src={profile.avatar_url || undefined} />
-                <AvatarFallback className="text-2xl">
-                  {profile.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
+        {/* Profile Header - Instagram Style */}
+        <div className="border-b border-border pb-8 mb-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex gap-8 md:gap-12">
+              {/* Avatar - Left */}
+              <div className="flex-shrink-0">
+                <Avatar className="w-20 h-20 md:w-36 md:h-36 border-2 border-gray-200">
+                  <AvatarImage src={profile.avatar_url || undefined} />
+                  <AvatarFallback className="text-2xl md:text-4xl">
+                    {profile.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
 
-              <div className="flex-1">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
-                  <h1 className="text-2xl md:text-3xl font-bold">{profile.name}</h1>
-                  
-                  {isOwnProfile ? (
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate('/profile')}
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      編輯個人資料
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
+              {/* User Info - Right */}
+              <div className="flex-1 min-w-0">
+                {/* Username and Actions */}
+                <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-5">
+                  <h1 className="text-xl md:text-2xl font-normal">{profile.name}</h1>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {isOwnProfile ? (
                       <Button
-                        variant={isFollowing ? 'outline' : 'default'}
-                        onClick={handleFollow}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate('/profile')}
+                        className="rounded-md px-4 h-8 text-sm font-semibold"
                       >
-                        {isFollowing ? (
-                          <>
-                            <UserMinus className="h-4 w-4 mr-2" />
-                            取消追蹤
-                          </>
-                        ) : (
-                          <>
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            追蹤
-                          </>
-                        )}
+                        編輯個人資料
                       </Button>
-                      <StartConversationButton otherUserId={userId!} variant="outline" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-6 mb-4">
-                  <div className="text-center">
-                    <p className="font-bold text-xl">{outfits.length}</p>
-                    <p className="text-sm text-muted-foreground">貼文</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-bold text-xl">{profile.followers_count}</p>
-                    <p className="text-sm text-muted-foreground">追蹤者</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-bold text-xl">{profile.following_count}</p>
-                    <p className="text-sm text-muted-foreground">追蹤中</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-bold text-xl">{profile.trending_count || 0}</p>
-                    <p className="text-sm text-muted-foreground">最火穿搭</p>
+                    ) : (
+                      <>
+                        <Button
+                          variant={isFollowing ? 'outline' : 'default'}
+                          size="sm"
+                          onClick={handleFollow}
+                          className="rounded-md px-4 h-8 text-sm font-semibold"
+                        >
+                          {isFollowing ? '取消追蹤' : '追蹤'}
+                        </Button>
+                        <StartConversationButton otherUserId={userId!} variant="outline" size="sm" />
+                      </>
+                    )}
                   </div>
                 </div>
 
+                {/* Stats - Instagram Style (Horizontal) */}
+                <div className="flex gap-6 md:gap-10 mb-4">
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-semibold">{outfits.length}</span>
+                    <span className="text-sm text-muted-foreground">貼文</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-semibold">{profile.followers_count}</span>
+                    <span className="text-sm text-muted-foreground">粉絲</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-semibold">{profile.trending_count || 0}</span>
+                    <span className="text-sm text-muted-foreground">最火穿搭</span>
+                  </div>
+                </div>
+
+                {/* Bio */}
                 {profile.bio && (
-                  <p className="text-muted-foreground">{profile.bio}</p>
+                  <p className="text-sm">
+                    {profile.bio}
+                  </p>
                 )}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>

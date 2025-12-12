@@ -7,12 +7,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Heart, 
-  MessageCircle, 
-  Share2, 
-  Bookmark, 
-  MoreVertical, 
+import {
+  Heart,
+  MessageCircle,
+  Share2,
+  Bookmark,
+  MoreVertical,
   Flag,
   User,
   UserPlus,
@@ -63,11 +63,10 @@ const CommunityFeed = () => {
   const [page, setPage] = useState(0);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchType, setSearchType] = useState<'all' | 'users' | 'posts' | 'tags'>('posts');
+  const [hotTags, setHotTags] = useState<string[]>([]);
   const [tryOnConfirmDialog, setTryOnConfirmDialog] = useState<{ open: boolean; outfit: Outfit | null }>({ open: false, outfit: null });
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'following'>('latest');
   const [filterTag, setFilterTag] = useState<string>('all');
-  const [showSearchResults, setShowSearchResults] = useState(false);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
   const [detailDialog, setDetailDialog] = useState<{ isOpen: boolean; outfit: Outfit | null }>({
@@ -93,22 +92,16 @@ const CommunityFeed = () => {
 
   const ITEMS_PER_PAGE = 20;
 
-  const handleSearch = () => {
-    const trimmedQuery = searchInput.trim();
-    setSearchQuery(trimmedQuery);
-    setShowSearchResults(!!trimmedQuery && searchType !== 'posts');
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
+  // Instant search with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const handleTagSelect = (tag: string) => {
     setFilterTag(tag);
-    setShowSearchResults(false);
-    setSearchQuery('');
     setSearchInput('');
   };
 
@@ -120,14 +113,7 @@ const CommunityFeed = () => {
     fetchOutfits(0, true);
   }, [user, searchQuery, sortBy, filterTag]);
 
-  useEffect(() => {
-    // Handle search results display
-    if (searchQuery && searchType !== 'posts') {
-      setShowSearchResults(true);
-    } else {
-      setShowSearchResults(false);
-    }
-  }, [searchQuery, searchType]);
+
 
   useEffect(() => {
     // Fetch all unique tags for filter dropdown
@@ -180,7 +166,7 @@ const CommunityFeed = () => {
 
   const fetchOutfits = async (currentPage: number = 0, reset: boolean = false) => {
     const isInitialLoad = currentPage === 0;
-    
+
     if (isInitialLoad) {
       setLoading(true);
     } else {
@@ -357,10 +343,10 @@ const CommunityFeed = () => {
         prevOutfits.map(outfit =>
           outfit.id === outfitId
             ? {
-                ...outfit,
-                is_liked: !isCurrentlyLiked,
-                likes_count: isCurrentlyLiked ? outfit.likes_count - 1 : outfit.likes_count + 1
-              }
+              ...outfit,
+              is_liked: !isCurrentlyLiked,
+              likes_count: isCurrentlyLiked ? outfit.likes_count - 1 : outfit.likes_count + 1
+            }
             : outfit
         )
       );
@@ -375,10 +361,10 @@ const CommunityFeed = () => {
         prevOutfits.map(outfit =>
           outfit.id === outfitId
             ? {
-                ...outfit,
-                is_liked: isCurrentlyLiked,
-                likes_count: isCurrentlyLiked ? outfit.likes_count + 1 : outfit.likes_count - 1
-              }
+              ...outfit,
+              is_liked: isCurrentlyLiked,
+              likes_count: isCurrentlyLiked ? outfit.likes_count + 1 : outfit.likes_count - 1
+            }
             : outfit
         )
       );
@@ -436,7 +422,7 @@ const CommunityFeed = () => {
 
         await supabase.rpc('decrement_follower_count', { user_id: userId });
         await supabase.rpc('decrement_following_count', { user_id: user.id });
-        
+
         toast({
           title: '已取消追蹤',
           description: '成功取消追蹤該用戶',
@@ -451,7 +437,7 @@ const CommunityFeed = () => {
 
         await supabase.rpc('increment_follower_count', { user_id: userId });
         await supabase.rpc('increment_following_count', { user_id: user.id });
-        
+
         toast({
           title: '追蹤成功',
           description: '您現在可以在「僅追蹤中」查看該用戶的貼文',
@@ -464,7 +450,7 @@ const CommunityFeed = () => {
         description: error.message || '追蹤操作失敗，請稍後再試',
         variant: "destructive",
       });
-      
+
       // Revert on error
       setFollowingUsers(prev => {
         const newSet = new Set(prev);
@@ -475,7 +461,7 @@ const CommunityFeed = () => {
         }
         return newSet;
       });
-      
+
       setOutfits(prevOutfits =>
         prevOutfits.map(outfit =>
           outfit.user_id === userId
@@ -583,7 +569,7 @@ const CommunityFeed = () => {
         description: error.message || '收藏操作失敗，請稍後再試',
         variant: 'destructive',
       });
-      
+
       // Revert on error
       setOutfits(prevOutfits =>
         prevOutfits.map(outfit =>
@@ -614,85 +600,88 @@ const CommunityFeed = () => {
   return (
     <div className="space-y-6">
       {/* Search and Filter Section */}
-      <div className="bg-card rounded-lg p-6 shadow-md space-y-4">
+      <div className="bg-card rounded-lg p-6 shadow-md space-y-4" id="search-section">
         <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search Input with Type Selector */}
+          {/* Simplified Search Input */}
           <div className="flex-1">
-            <div className="flex gap-2">
-              <Select value={searchType} onValueChange={(value: 'all' | 'users' | 'posts' | 'tags') => setSearchType(value)}>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder={t('search.searchPosts')}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="pl-10 text-foreground"
+                maxLength={100}
+              />
+              {searchInput && (
+                <button
+                  onClick={() => setSearchInput('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Popular Tags - Quick Filters */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm text-muted-foreground font-medium">熱門標籤:</span>
+            {['街頭', '優雅', '休閒', '運動', '復古', '韓系'].map((tag) => (
+              <Badge
+                key={tag}
+                variant={filterTag === tag ? 'default' : 'outline'}
+                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={() => setFilterTag(filterTag === tag ? 'all' : tag)}
+              >
+                #{tag}
+              </Badge>
+            ))}
+            {filterTag !== 'all' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setFilterTag('all')}
+                className="h-7 text-xs"
+              >
+                清除篩選
+              </Button>
+            )}
+          </div>
+
+          {/* Sort Options */}
+          <div className="flex flex-wrap gap-4 items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">排序:</span>
+              <Select value={sortBy} onValueChange={(value: 'latest' | 'popular') => setSortBy(value)}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('search.all')}</SelectItem>
-                  <SelectItem value="users">{t('search.users')}</SelectItem>
-                  <SelectItem value="posts">{t('search.posts')}</SelectItem>
-                  <SelectItem value="tags">{t('search.tags')}</SelectItem>
+                  <SelectItem value="latest">{t('community.latest')}</SelectItem>
+                  <SelectItem value="popular">{t('community.popular')}</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder={
-                    searchType === 'users' ? t('search.searchUsers') :
-                    searchType === 'tags' ? t('search.searchTags') :
-                    t('search.searchPosts')
-                  }
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="pl-10"
-                  maxLength={100}
-                />
-              </div>
-              <Button onClick={handleSearch} className="px-6">
-                {t('search.search')}
-              </Button>
             </div>
-          </div>
 
-          {/* Sort By */}
-          <div className="w-full lg:w-48">
-            <Select value={sortBy} onValueChange={(value: 'latest' | 'popular' | 'following') => setSortBy(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('community.sortBy')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="latest">{t('community.latest')}</SelectItem>
-                <SelectItem value="popular">{t('community.popular')}</SelectItem>
-                {user && <SelectItem value="following">{t('community.following')}</SelectItem>}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Filter by Tag */}
-          <div className="w-full lg:w-48">
-            <Select value={filterTag} onValueChange={setFilterTag}>
-              <SelectTrigger>
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder={t('community.filterByTag')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('community.allTags')}</SelectItem>
-                {allTags.map((tag) => (
-                  <SelectItem key={tag} value={tag}>
-                    #{tag}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Results Count */}
+            {!loading && outfits.length > 0 && (
+              <span className="text-sm text-muted-foreground">
+                找到 {outfits.length} 個結果
+              </span>
+            )}
           </div>
         </div>
 
         {/* Active Filters Display */}
-        {(searchQuery || filterTag !== 'all') && !showSearchResults && (
+        {(searchQuery || filterTag !== 'all') && (
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-sm text-muted-foreground">{t('community.activeFilters')}:</span>
-            {searchQuery && searchType === 'posts' && (
+            {searchQuery && (
               <Badge variant="secondary" className="gap-1">
                 {t('search.search')}: {searchQuery}
-                <button onClick={() => { setSearchQuery(''); setSearchInput(''); }} className="ml-1 hover:text-destructive">
+                <button onClick={() => setSearchInput('')} className="ml-1 hover:text-destructive">
                   ×
                 </button>
               </Badge>
@@ -709,213 +698,233 @@ const CommunityFeed = () => {
         )}
       </div>
 
-      {/* Search Results or Feed */}
-      {showSearchResults ? (
-        <SearchResults
-          searchQuery={searchQuery}
-          searchType={searchType}
-          onSelectTag={handleTagSelect}
-        />
-      ) : (
-        <>
+      {/* Feed */}
+      <>
 
-      {outfits.length === 0 ? (
-        <Card className="text-center p-8">
-          <p className="text-muted-foreground">{t('community.noOutfitsMessage')}</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            {t('community.firstOutfit')}
-          </p>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {outfits.map((outfit) => (
-            <Card key={outfit.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="relative">
-                <AspectRatio ratio={4 / 5}>
-                  <img
-                    src={outfit.image_url}
-                    alt={`${outfit.title} 穿搭靈感`}
-                    className="w-full h-full object-contain bg-muted cursor-pointer hover:opacity-90 transition-opacity"
-                    loading="lazy"
-                    decoding="async"
-                    onClick={() => handleOpenImageViewer(outfit)}
-                    onError={(e) => {
-                      const img = e.currentTarget as HTMLImageElement;
-                      img.onerror = null;
-                      img.src = '/placeholder.svg';
-                    }}
-                  />
-                </AspectRatio>
-              </div>
-              
-              <CardContent className="p-4">
-                {/* User Info */}
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div 
-                    className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => navigate(`/user/${outfit.user_id}`)}
-                  >
-                    <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarImage src={outfit.profiles?.avatar_url || undefined} />
-                      <AvatarFallback>
-                        <User className="h-4 w-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium truncate">
-                      {outfit.profiles?.name || t('community.anonymousUser')}
-                    </span>
+        {outfits.length === 0 ? (
+          <Card className="text-center p-8">
+            <p className="text-muted-foreground">{t('community.noOutfitsMessage')}</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              {t('community.firstOutfit')}
+            </p>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {outfits.map((outfit) => (
+              <Card key={outfit.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="relative">
+                  <AspectRatio ratio={4 / 5}>
+                    <img
+                      src={outfit.image_url}
+                      alt={`${outfit.title} 穿搭靈感`}
+                      className="w-full h-full object-contain bg-muted cursor-pointer hover:opacity-90 transition-opacity"
+                      loading="lazy"
+                      decoding="async"
+                      onClick={() => handleOpenImageViewer(outfit)}
+                      onError={(e) => {
+                        const img = e.currentTarget as HTMLImageElement;
+                        img.onerror = null;
+                        img.src = '/placeholder.svg';
+                      }}
+                    />
+                  </AspectRatio>
+                </div>
+
+                <CardContent className="p-4">
+                  {/* User Info */}
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div
+                      className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => navigate(`/user/${outfit.user_id}`)}
+                    >
+                      <Avatar className="h-8 w-8 flex-shrink-0">
+                        <AvatarImage src={outfit.profiles?.avatar_url || undefined} />
+                        <AvatarFallback>
+                          <User className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium truncate">
+                        {outfit.profiles?.name || t('community.anonymousUser')}
+                      </span>
+                    </div>
+
+                    {/* Follow Button - Always visible for other users' posts */}
+                    {user && user.id !== outfit.user_id && (
+                      <Button
+                        variant={outfit.is_following ? "secondary" : "default"}
+                        size="sm"
+                        className="h-8 px-4 text-xs flex-shrink-0 font-semibold min-w-[70px]"
+                        onClick={() => handleFollow(outfit.user_id, outfit.is_following || false)}
+                      >
+                        {outfit.is_following ? '✓ 已追蹤' : '+ 追蹤'}
+                      </Button>
+                    )}
                   </div>
 
-                  {/* Follow Button - Always visible for other users' posts */}
-                  {user && user.id !== outfit.user_id && (
-                    <Button
-                      variant={outfit.is_following ? "secondary" : "default"}
-                      size="sm"
-                      className="h-8 px-4 text-xs flex-shrink-0 font-semibold min-w-[70px]"
-                      onClick={() => handleFollow(outfit.user_id, outfit.is_following || false)}
-                    >
-                      {outfit.is_following ? '✓ 已追蹤' : '+ 追蹤'}
-                    </Button>
+                  {/* Title and Description */}
+                  <h3 className="font-semibold mb-2 line-clamp-2">
+                    {outfit.title}
+                  </h3>
+                  {outfit.description && (
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                      {outfit.description}
+                    </p>
                   )}
-                </div>
 
-                {/* Title and Description */}
-                <h3 className="font-semibold mb-2 line-clamp-2">
-                  {outfit.title}
-                </h3>
-                {outfit.description && (
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {outfit.description}
-                  </p>
-                )}
+                  {/* Tags */}
+                  {outfit.style_tags && outfit.style_tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {outfit.style_tags.slice(0, 3).map((tag) => (
+                        <Badge key={tag} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {outfit.style_tags.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{outfit.style_tags.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
 
-                {/* Tags */}
-                {outfit.style_tags && outfit.style_tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {outfit.style_tags.slice(0, 3).map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {outfit.style_tags.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{outfit.style_tags.length - 3}
-                      </Badge>
-                    )}
+                  {/* Actions */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-1 p-0 h-auto"
+                        onClick={() => handleLike(outfit.id, outfit.is_liked || false)}
+                      >
+                        <Heart
+                          className={`h-4 w-4 ${outfit.is_liked ? 'fill-red-500 text-red-500' : ''
+                            }`}
+                        />
+                        <span className="text-sm">{outfit.likes_count}</span>
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-1 p-0 h-auto"
+                        onClick={() => handleOpenComments(outfit)}
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        <span className="text-sm">{outfit.comments_count || 0}</span>
+                      </Button>
+
+                      {(() => {
+                        const count = outfit.try_count || 0;
+                        // Heatmap colors: 0=blue, 5=cyan, 10=green, 20=yellow, 50+=red
+                        let bgColor, textColor, borderColor;
+                        if (count === 0) {
+                          bgColor = 'from-blue-500/20 to-blue-400/10';
+                          textColor = 'text-blue-400';
+                          borderColor = 'border-blue-400/30';
+                        } else if (count < 5) {
+                          bgColor = 'from-cyan-500/20 to-cyan-400/10';
+                          textColor = 'text-cyan-400';
+                          borderColor = 'border-cyan-400/30';
+                        } else if (count < 10) {
+                          bgColor = 'from-green-500/20 to-green-400/10';
+                          textColor = 'text-green-400';
+                          borderColor = 'border-green-400/30';
+                        } else if (count < 20) {
+                          bgColor = 'from-yellow-500/20 to-yellow-400/10';
+                          textColor = 'text-yellow-400';
+                          borderColor = 'border-yellow-400/30';
+                        } else if (count < 50) {
+                          bgColor = 'from-orange-500/20 to-orange-400/10';
+                          textColor = 'text-orange-400';
+                          borderColor = 'border-orange-400/30';
+                        } else {
+                          bgColor = 'from-red-500/20 to-red-400/10';
+                          textColor = 'text-red-400';
+                          borderColor = 'border-red-400/30';
+                        }
+                        return (
+                          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full bg-gradient-to-r ${bgColor} border ${borderColor} transition-all duration-300`}>
+                            <Shirt className={`h-4 w-4 ${textColor}`} />
+                            <span className={`text-sm font-medium ${textColor}`}>{count}</span>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1 px-4 py-1 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold transition-all duration-200"
+                        onClick={() => setTryOnConfirmDialog({ open: true, outfit })}
+                        title={t('community.tryTooltip')}
+                      >
+                        {t('community.try')}
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-1 p-0 h-auto"
+                        onClick={() => handleBookmark(outfit.id, outfit.is_bookmarked || false)}
+                        title={outfit.is_bookmarked ? t('community.unbookmarkTooltip') : t('community.bookmarkTooltip')}
+                      >
+                        <Bookmark
+                          className={`h-4 w-4 ${outfit.is_bookmarked ? 'fill-primary text-primary' : ''
+                            }`}
+                        />
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-1 p-0 h-auto"
+                        onClick={() => handleOpenReport(outfit.id, outfit.title)}
+                        title={t('community.reportTooltip')}
+                      >
+                        <Flag className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-1 p-0 h-auto"
+                        onClick={() => setShareDialog({
+                          isOpen: true,
+                          outfitId: outfit.id,
+                          outfitTitle: outfit.title,
+                          outfitImage: outfit.image_url
+                        })}
+                        title={t('community.shareTooltip')}
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
-                {/* Actions */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex items-center gap-1 p-0 h-auto"
-                      onClick={() => handleLike(outfit.id, outfit.is_liked || false)}
-                    >
-                      <Heart
-                        className={`h-4 w-4 ${
-                          outfit.is_liked ? 'fill-red-500 text-red-500' : ''
-                        }`}
-                      />
-                      <span className="text-sm">{outfit.likes_count}</span>
-                    </Button>
-                    
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex items-center gap-1 p-0 h-auto"
-                      onClick={() => handleOpenComments(outfit)}
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      <span className="text-sm">{outfit.comments_count || 0}</span>
-                    </Button>
+        {/* Infinite Scroll Observer Target */}
+        {hasMore && !loading && (
+          <div ref={observerTarget} className="flex justify-center py-8">
+            {loadingMore && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                <span>{t('community.loadMore')}</span>
+              </div>
+            )}
+          </div>
+        )}
 
-                    {outfit.try_count && outfit.try_count > 0 && (
-                      <div className="flex items-center gap-1">
-                        <Shirt className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">{outfit.try_count}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1 px-4 py-1 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold transition-all duration-200"
-                      onClick={() => setTryOnConfirmDialog({ open: true, outfit })}
-                      title="試試這個風格"
-                    >
-                      Try
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex items-center gap-1 p-0 h-auto"
-                      onClick={() => handleBookmark(outfit.id, outfit.is_bookmarked || false)}
-                      title={outfit.is_bookmarked ? '取消收藏' : '收藏'}
-                    >
-                      <Bookmark 
-                        className={`h-4 w-4 ${
-                          outfit.is_bookmarked ? 'fill-primary text-primary' : ''
-                        }`}
-                      />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex items-center gap-1 p-0 h-auto"
-                      onClick={() => handleOpenReport(outfit.id, outfit.title)}
-                      title="舉報"
-                    >
-                      <Flag className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex items-center gap-1 p-0 h-auto"
-                      onClick={() => setShareDialog({
-                        isOpen: true,
-                        outfitId: outfit.id,
-                        outfitTitle: outfit.title,
-                        outfitImage: outfit.image_url
-                      })}
-                      title="分享"
-                    >
-                      <Share2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Infinite Scroll Observer Target */}
-      {hasMore && !loading && (
-        <div ref={observerTarget} className="flex justify-center py-8">
-          {loadingMore && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-              <span>載入更多...</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* End of Results */}
-      {!hasMore && outfits.length > 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          <p>已經沒有更多內容了 🎉</p>
-        </div>
-      )}
+        {/* End of Results */}
+        {!hasMore && outfits.length > 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>{t('community.noMoreContent')}</p>
+          </div>
+        )}
       </>
-      )}
 
       {/* Outfit Detail Dialog */}
       <OutfitDetailDialog
@@ -924,8 +933,8 @@ const CommunityFeed = () => {
         outfit={detailDialog.outfit}
         isLiked={detailDialog.outfit?.is_liked}
         onLikeChange={(outfitId, isLiked) => {
-          setOutfits(prev => prev.map(o => 
-            o.id === outfitId 
+          setOutfits(prev => prev.map(o =>
+            o.id === outfitId
               ? { ...o, is_liked: isLiked, likes_count: isLiked ? o.likes_count + 1 : o.likes_count - 1 }
               : o
           ));
@@ -950,13 +959,13 @@ const CommunityFeed = () => {
       <AlertDialog open={tryOnConfirmDialog.open} onOpenChange={(open) => setTryOnConfirmDialog({ ...tryOnConfirmDialog, open })}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>試試這個風格？</AlertDialogTitle>
+            <AlertDialogTitle>{t('community.tryOnConfirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              將會自動跳轉到換裝頁面，並載入這件穿搭照片。您只需要上傳自己的照片就可以嘗試換裝了！
+              {t('community.tryOnConfirmDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('community.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={async () => {
               if (tryOnConfirmDialog.outfit) {
                 // Increment try count
@@ -965,16 +974,16 @@ const CommunityFeed = () => {
                 } catch (error) {
                   console.error('Error incrementing try count:', error);
                 }
-                
-                navigate('/better-than-model', { 
-                  state: { 
-                    preloadedClothingImage: tryOnConfirmDialog.outfit.image_url 
-                  } 
+
+                navigate('/better-than-model', {
+                  state: {
+                    preloadedClothingImage: tryOnConfirmDialog.outfit.image_url
+                  }
                 });
               }
               setTryOnConfirmDialog({ open: false, outfit: null });
             }}>
-              Yes
+              {t('community.yes')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

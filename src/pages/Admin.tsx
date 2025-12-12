@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/lib/supabase';
@@ -9,10 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  AlertTriangle, 
-  CheckCircle, 
-  XCircle, 
+import {
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
   Clock,
   Shield,
   Eye,
@@ -298,9 +298,16 @@ const Admin = () => {
   return (
     <div className="container py-8">
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Shield className="h-8 w-8 text-primary" />
-          <h1 className="text-4xl font-bold">管理員後台</h1>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <Shield className="h-8 w-8 text-primary" />
+            <h1 className="text-4xl font-bold">管理員後台</h1>
+          </div>
+          <Link to="/admin/analytics">
+            <Button variant="outline">
+              📊 數據分析
+            </Button>
+          </Link>
         </div>
         <p className="text-muted-foreground">審核舉報內容並管理社群安全</p>
       </div>
@@ -465,9 +472,9 @@ const Admin = () => {
                                   <Button
                                     size="sm"
                                     variant="destructive"
-                                    onClick={() => setOutfitToDelete({ 
-                                      id: report.outfit_id, 
-                                      title: report.outfit?.title || '未知貼文' 
+                                    onClick={() => setOutfitToDelete({
+                                      id: report.outfit_id,
+                                      title: report.outfit?.title || '未知貼文'
                                     })}
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
@@ -507,7 +514,7 @@ const Admin = () => {
               查看完整的舉報資訊和相關內容
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedReport && (
             <div className="space-y-4">
               <div className="flex gap-4">
@@ -567,9 +574,9 @@ const Admin = () => {
                   <>
                     <Button
                       variant="destructive"
-                      onClick={() => setOutfitToDelete({ 
-                        id: selectedReport.outfit_id, 
-                        title: selectedReport.outfit?.title || '未知貼文' 
+                      onClick={() => setOutfitToDelete({
+                        id: selectedReport.outfit_id,
+                        title: selectedReport.outfit?.title || '未知貼文'
                       })}
                     >
                       <Trash2 className="h-4 w-4 mr-2" />

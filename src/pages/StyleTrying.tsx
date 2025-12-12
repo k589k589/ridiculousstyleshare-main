@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNativeCamera } from "@/hooks/useNativeCamera";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
+import rssWatermark from "@/assets/rss-watermark.png";
 import {
   Select,
   SelectContent,
@@ -19,7 +20,50 @@ const StyleTrying = () => {
   const [bodyPhoto, setBodyPhoto] = useState<File | null>(null);
   const [bodyPreview, setBodyPreview] = useState<string>("");
   const [selectedGender, setSelectedGender] = useState<string>("");
-  const [selectedStyle, setSelectedStyle] = useState<string>("隨機");
+  const [selectedStyle, setSelectedStyle] = useState<string>("");
+
+  // Style options by gender
+  const maleStyles = [
+    { value: 'Minimalist', label: '極簡風' },
+    { value: 'Italian Classic', label: '經典義式紳裝' },
+    { value: 'Mediterranean', label: '南歐渡假風' },
+    { value: 'British Gentleman', label: '英倫紳士 / 薩佛街風格' },
+    { value: 'Streetwear', label: '街頭潮流' },
+    { value: 'Business Casual', label: '商務休閒' },
+    { value: 'Smart Casual', label: '體面休閒' },
+    { value: 'City Boy', label: '日系 City Boy' },
+    { value: 'Gorpcore', label: '戶外機能 / 山系' },
+    { value: 'Ivy League', label: '學院風' },
+    { value: 'Vintage', label: '復古古著' },
+    { value: 'Old Money', label: '老錢風 / 靜奢' },
+    { value: 'Workwear', label: '工裝風格' },
+    { value: 'Techwear', label: '賽博龐克 / 機能' },
+    { value: 'Athleisure', label: '運動休閒' },
+    { value: 'Grunge', label: '頹廢搖滾' },
+    { value: 'American Casual', label: '美式休閒' },
+    { value: 'Military', label: '軍事風格' },
+  ];
+
+  const femaleStyles = [
+    { value: 'Coquette', label: '甜美少女風' },
+    { value: 'Minimalist', label: '極簡風' },
+    { value: 'Streetwear', label: '街頭潮流' },
+    { value: 'Business Casual', label: '商務休閒' },
+    { value: 'French Chic', label: '法式慵懶' },
+    { value: 'Bohemian', label: '波西米亞' },
+    { value: 'Cottagecore', label: '田園風' },
+    { value: 'Preppy', label: '學院風' },
+    { value: 'Vintage', label: '復古古著' },
+    { value: 'Old Money', label: '老錢風 / 靜奢' },
+    { value: 'Y2K', label: 'Y2K 千禧風' },
+    { value: 'Balletcore', label: '芭蕾風' },
+    { value: 'Athleisure', label: '運動休閒' },
+    { value: 'Boyish', label: '中性風' },
+    { value: 'Mori Girl', label: '森林系' },
+  ];
+
+  // Get styles based on selected gender
+  const currentStyles = selectedGender === 'Male' ? maleStyles : selectedGender === 'Female' ? femaleStyles : [];
   const [selectedSeason, setSelectedSeason] = useState<string>("隨機");
   const [selectedBrand, setSelectedBrand] = useState<string>("隨機");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -30,10 +74,10 @@ const StyleTrying = () => {
   const [tryonsCount, setTryonsCount] = useState(0);
   const [isLoadingCount, setIsLoadingCount] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  
+
   const bodyInputRef = useRef<HTMLInputElement>(null);
   const progressInterval = useRef<number>();
-  
+
   const { toast } = useToast();
   const { user } = useAuth();
   const { takePicture } = useNativeCamera();
@@ -85,6 +129,11 @@ const StyleTrying = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Reset style when gender changes
+  useEffect(() => {
+    setSelectedStyle("");
+  }, [selectedGender]);
 
   const handleFileUpload = (
     file: File,
@@ -341,7 +390,7 @@ const StyleTrying = () => {
       setProgress((prev) => {
         if (prev >= 95) return prev;
         const newProgress = prev + Math.random() * 1.5 + 0.5; // 減慢速度：每次增加 0.5-2
-        
+
         // 更新階段性提示訊息
         const currentMessage = progressMessages
           .reverse()
@@ -349,7 +398,7 @@ const StyleTrying = () => {
         if (currentMessage) {
           setProgressMessage(currentMessage.message);
         }
-        
+
         return newProgress;
       });
     }, 500); // 從 200ms 改為 500ms
@@ -362,17 +411,10 @@ const StyleTrying = () => {
 
       // 轉換性別值為中文
       const genderValue = selectedGender === 'Male' ? '男性' : selectedGender === 'Female' ? '女性' : selectedGender;
-      
-      // 轉換風格值為中文
-      const styleMap: { [key: string]: string } = {
-        '隨機': '隨機',
-        'Korean Style': '韓系',
-        'Japanese Style': '日系',
-        'American Style': '美式',
-        'European Style': '歐風'
-      };
-      const styleValue = styleMap[selectedStyle] || selectedStyle;
-      
+
+      // 轉換風格值 - 直接使用英文值傳給 API
+      const styleValue = selectedStyle;
+
       // 轉換季節值為中文
       const seasonMap: { [key: string]: string } = {
         '隨機': '隨機',
@@ -382,7 +424,7 @@ const StyleTrying = () => {
         'Winter': '冬季'
       };
       const seasonValue = seasonMap[selectedSeason] || selectedSeason;
-      
+
       const formData = new FormData();
       formData.append('body_image', bodyPhoto);
       formData.append('gender', genderValue);
@@ -426,7 +468,7 @@ const StyleTrying = () => {
         const blob = await response.blob();
         const objUrl = URL.createObjectURL(blob);
         setResultImage(objUrl);
-        
+
         // Increment try-on count
         if (!isAdmin) {
           const { data: newCount } = await supabase.rpc('increment_user_tryons', {
@@ -436,9 +478,9 @@ const StyleTrying = () => {
             setTryonsCount(newCount);
           }
         }
-        
-        toast({ 
-          title: "風格轉換成功", 
+
+        toast({
+          title: "風格轉換成功",
           description: "您的新風格已生成"
         });
         return;
@@ -452,7 +494,7 @@ const StyleTrying = () => {
         setProgress(100);
         setTimeout(async () => {
           setResultImage(imgUrl);
-          
+
           // Increment try-on count
           if (!isAdmin) {
             const { data: newCount } = await supabase.rpc('increment_user_tryons', {
@@ -462,7 +504,7 @@ const StyleTrying = () => {
               setTryonsCount(newCount);
             }
           }
-          
+
           toast({
             title: "風格轉換成功",
             description: "您的新風格已生成",
@@ -477,7 +519,7 @@ const StyleTrying = () => {
         setProgress(100);
         setTimeout(async () => {
           setResultImage(trimmed);
-          
+
           // Increment try-on count
           if (!isAdmin) {
             const { data: newCount } = await supabase.rpc('increment_user_tryons', {
@@ -487,7 +529,7 @@ const StyleTrying = () => {
               setTryonsCount(newCount);
             }
           }
-          
+
           toast({
             title: "風格轉換成功",
             description: "您的新風格已生成",
@@ -517,7 +559,7 @@ const StyleTrying = () => {
           if (data.text) {
             setResultText(data.text);
           }
-          
+
           // Increment try-on count
           if (!isAdmin) {
             const { data: newCount } = await supabase.rpc('increment_user_tryons', {
@@ -527,7 +569,7 @@ const StyleTrying = () => {
               setTryonsCount(newCount);
             }
           }
-          
+
           toast({
             title: "風格轉換成功",
             description: "您的新風格已生成",
@@ -542,7 +584,7 @@ const StyleTrying = () => {
         setProgress(100);
         setTimeout(async () => {
           setResultImage(result);
-          
+
           // Increment try-on count
           if (!isAdmin) {
             const { data: newCount } = await supabase.rpc('increment_user_tryons', {
@@ -552,7 +594,7 @@ const StyleTrying = () => {
               setTryonsCount(newCount);
             }
           }
-          
+
           toast({
             title: "風格轉換成功",
             description: "您的新風格已生成",
@@ -586,12 +628,12 @@ const StyleTrying = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,15%,15%)] via-[hsl(210,20%,8%)] to-[hsl(220,20%,5%)]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_80%,rgba(197,149,96,0.08),transparent_50%)]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.02),transparent_50%)]"></div>
-      
+
       {/* Subtle texture overlay */}
       <div className="absolute inset-0 opacity-30" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
       }}></div>
-      
+
       <div className="relative z-10 py-20 px-4">
         <div className="max-w-7xl mx-auto px-0">
           {/* Premium Header */}
@@ -606,7 +648,7 @@ const StyleTrying = () => {
             <p className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed font-light">
               {t('styleTrying.subtitle')}
             </p>
-            
+
             {/* Try-on counter */}
             {user && !isLoadingCount && (
               <div className="mt-6 flex items-center justify-center gap-3">
@@ -625,36 +667,28 @@ const StyleTrying = () => {
                 </div>
               </div>
             )}
-            
-            <div className="mt-8 flex items-center justify-center gap-2">
-              <div className="w-2 h-2 bg-[hsl(45,60%,50%)] rounded-full animate-pulse"></div>
-              <div className="h-px w-16 bg-gradient-to-r from-[hsl(45,60%,50%)] to-transparent"></div>
-              <div className="text-[hsl(45,60%,50%)] text-sm font-medium tracking-widest">EXCLUSIVE</div>
-              <div className="h-px w-16 bg-gradient-to-l from-[hsl(45,60%,50%)] to-transparent"></div>
-              <div className="w-2 h-2 bg-[hsl(45,60%,50%)] rounded-full animate-pulse"></div>
-            </div>
+
+
           </div>
 
           <div className="grid grid-cols-1 gap-8 mb-20 max-w-none w-full">
             {/* Body Photo Upload */}
             <div className="group relative overflow-hidden bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-2xl shadow-[0_40px_120px_-20px_rgba(0,0,0,0.6)] hover:shadow-[0_50px_150px_-20px_rgba(197,149,96,0.4)] transition-all duration-700 hover:-translate-y-3 hover:scale-[1.02] rounded-lg">
               {/* Background Image */}
-              <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20 group-hover:opacity-30 transition-opacity duration-500" 
-                   style={{backgroundImage: `url('/lovable-uploads/5acdebbb-cca2-43d2-860a-65f67ab9fdf7.png')`}}></div>
-              
+              <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20 group-hover:opacity-30 transition-opacity duration-500"
+                style={{ backgroundImage: `url('/lovable-uploads/5acdebbb-cca2-43d2-860a-65f67ab9fdf7.png')` }}></div>
+
               {/* Dark overlay for better text readability */}
               <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60"></div>
-              
+
               {/* Animated gradient border */}
               <div className="absolute -inset-[1px] bg-gradient-to-r from-[hsl(45,60%,50%,0.3)] via-transparent to-[hsl(45,60%,50%,0.3)] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              
-              {/* Floating orbs */}
-              <div className="absolute top-6 right-6 w-3 h-3 bg-[hsl(45,60%,50%)] rounded-full animate-pulse opacity-60 z-10"></div>
-              <div className="absolute bottom-6 left-6 w-2 h-2 bg-[hsl(45,80%,60%)] rounded-full animate-pulse opacity-40 delay-300 z-10"></div>
-              
+
+
+
               {/* Subtle glass effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-[hsl(45,20%,25%,0.08)] to-[hsl(45,40%,35%,0.03)] rounded-lg backdrop-blur-sm"></div>
-              
+
               <div className="text-center relative z-10 pb-6">
                 <h3 className="text-2xl font-playfair text-white mb-2 group-hover:text-[hsl(45,60%,50%)] transition-colors duration-300">
                   {t('styleTrying.uploadBody')}
@@ -663,9 +697,9 @@ const StyleTrying = () => {
                   {t('styleTrying.uploadDesc')}
                 </p>
               </div>
-              
+
               <div className="space-y-6 relative z-10 px-6">
-                <div 
+                <div
                   className="relative border-2 border-dashed border-white/25 rounded-2xl p-8 text-center cursor-pointer hover:border-[hsl(45,60%,50%,0.6)] hover:bg-gradient-to-br hover:from-[hsl(45,60%,50%,0.05)] hover:to-[hsl(45,80%,60%,0.03)] transition-all duration-500 group-hover:border-[hsl(45,60%,50%,0.4)] overflow-hidden"
                   onClick={() => bodyInputRef.current?.click()}
                   onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-[hsl(45,60%,50%)]', 'bg-[hsl(45,60%,50%,0.05)]'); }}
@@ -679,7 +713,7 @@ const StyleTrying = () => {
                 >
                   {/* Shimmer effect */}
                   <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/5 to-transparent group-hover:translate-x-full transition-transform duration-1000"></div>
-                  
+
                   {bodyPreview ? (
                     <>
                       <img
@@ -689,12 +723,12 @@ const StyleTrying = () => {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
                       <div className="absolute inset-0 bg-gradient-to-br from-[hsl(45,60%,50%,0.1)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                      
+
                       {/* Success badge */}
                       <div className="absolute top-4 right-4 bg-gradient-to-r from-[hsl(45,60%,50%)] to-[hsl(45,80%,60%)] text-black px-4 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
                         {t('upload.completed')}
                       </div>
-                      
+
                       {/* Overlay info */}
                       <div className="absolute bottom-4 left-4 right-4 bg-black/30 backdrop-blur-sm rounded-xl p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <p className="text-white text-sm font-medium">{t('upload.clickToReselect')}</p>
@@ -705,9 +739,6 @@ const StyleTrying = () => {
                       <div className="relative w-24 h-24 mx-auto">
                         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/15 to-white/5 flex items-center justify-center border border-white/20 shadow-inner">
                         </div>
-                        {/* Floating particles */}
-                        <div className="absolute -top-2 -right-2 w-3 h-3 bg-[hsl(45,60%,50%)] rounded-full opacity-60 animate-bounce"></div>
-                        <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-white rounded-full opacity-40 animate-pulse"></div>
                       </div>
                       <div className="space-y-3">
                         <p className="font-bold text-white text-xl group-hover:text-[hsl(45,60%,50%)] transition-colors duration-300">
@@ -719,7 +750,7 @@ const StyleTrying = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <input
                   ref={bodyInputRef}
                   type="file"
@@ -727,9 +758,9 @@ const StyleTrying = () => {
                   onChange={handleBodyUpload}
                   className="hidden"
                 />
-                
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
                   className="w-full bg-gradient-to-r from-gray-700/90 to-gray-600/90 border-gray-500/50 text-white hover:bg-gradient-to-r hover:from-gray-600/90 hover:to-gray-500/90 hover:border-gray-400/60 hover:text-white backdrop-blur-xl h-14 text-lg font-medium transition-all duration-500 rounded-2xl shadow-lg hover:shadow-[0_0_30px_rgba(100,100,100,0.3)] group"
                   onClick={() => bodyInputRef.current?.click()}
                 >
@@ -755,16 +786,24 @@ const StyleTrying = () => {
             {/* Style Selection */}
             <div className="space-y-2">
               <label className="text-white text-sm font-medium">{t('styleTrying.selectStyle')}</label>
-              <Select value={selectedStyle} onValueChange={setSelectedStyle}>
-                <SelectTrigger className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10">
-                  <SelectValue placeholder={t('styleTrying.selectStylePlaceholder')} />
+              <Select
+                value={selectedStyle}
+                onValueChange={setSelectedStyle}
+                disabled={!selectedGender}
+              >
+                <SelectTrigger className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 disabled:opacity-50">
+                  <SelectValue placeholder={selectedGender ? t('styleTrying.selectStylePlaceholder') : '請先選擇性別'} />
                 </SelectTrigger>
-                <SelectContent className="bg-[hsl(210,20%,10%)] border-white/10">
-                  <SelectItem value="隨機" className="text-white hover:bg-white/10">{t('styleTrying.styleRandom')}</SelectItem>
-                  <SelectItem value="Korean Style" className="text-white hover:bg-white/10">{t('styleTrying.styleKorean')}</SelectItem>
-                  <SelectItem value="Japanese Style" className="text-white hover:bg-white/10">{t('styleTrying.styleJapanese')}</SelectItem>
-                  <SelectItem value="American Style" className="text-white hover:bg-white/10">{t('styleTrying.styleAmerican')}</SelectItem>
-                  <SelectItem value="European Style" className="text-white hover:bg-white/10">{t('styleTrying.styleEuropean')}</SelectItem>
+                <SelectContent className="bg-[hsl(210,20%,10%)] border-white/10 max-h-[300px]">
+                  {currentStyles.map((style) => (
+                    <SelectItem
+                      key={style.value}
+                      value={style.value}
+                      className="text-white hover:bg-white/10"
+                    >
+                      {style.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -819,43 +858,58 @@ const StyleTrying = () => {
 
             {/* Result */}
             {resultImage && (
-              <div className="group relative overflow-hidden bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-2xl shadow-[0_40px_120px_-20px_rgba(0,0,0,0.6)] rounded-lg">
-                <div className="relative p-8">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div>
-                      <h2 className="text-2xl font-playfair font-bold text-white">{t('styleTrying.exclusiveResult')}</h2>
-                      <p className="text-white/60 text-sm">{t('styleTrying.resultDesc')}</p>
-                    </div>
+              <div className="mb-12 md:mb-20">
+                <div className="relative bg-gradient-to-br from-white/3 to-white/1 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 md:p-12 border border-white/5 shadow-[0_25px_80px_-20px_rgba(0,0,0,0.4)]">
+                  <div className="text-center mb-6 md:mb-12">
+                    <h3 className="font-playfair text-2xl md:text-5xl font-bold text-white mb-3 md:mb-6">
+                      {t('styleTrying.exclusiveResult')}
+                    </h3>
+                    <p className="text-base md:text-xl text-white/60 max-w-2xl mx-auto">
+                      {t('styleTrying.resultDesc')}
+                    </p>
                   </div>
-                  <img
-                    src={resultImage}
-                    alt="Result"
-                    className="w-full rounded-lg mb-6"
-                  />
-                  {resultText && (
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6 mb-6">
-                      <p className="text-white/90 leading-relaxed whitespace-pre-wrap">
-                        {resultText}
-                      </p>
+
+                  <div className="max-w-none w-full mx-auto">
+                    <div className="relative group rounded-2xl md:rounded-3xl overflow-hidden">
+                      <img
+                        src={resultImage}
+                        alt="Style result"
+                        className="w-full max-h-[75vh] md:max-h-[70vh] object-contain rounded-xl md:rounded-2xl transition-transform duration-500 group-hover:scale-[1.02]"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent rounded-xl md:rounded-2xl pointer-events-none"></div>
+
+                      {/* RSS Logo Watermark - bottom right */}
+                      <img
+                        src={rssWatermark}
+                        alt="RSS"
+                        className="absolute bottom-3 right-3 md:bottom-6 md:right-6 w-10 h-auto md:w-14 opacity-70"
+                      />
                     </div>
-                  )}
-                  
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button
-                      onClick={() => {
-                        const link = document.createElement('a');
-                        link.href = resultImage;
-                        link.download = 'style-trying-result.jpg';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                      }}
-                      className="bg-gradient-to-r from-primary to-orange-400 hover:from-orange-500 hover:to-primary text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-300"
-                      size="lg"
-                    >
-                      喜歡嗎?下載下來Po到IG吧！
-                    </Button>
+
+                    {resultText && (
+                      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6 mt-6">
+                        <p className="text-white/90 leading-relaxed whitespace-pre-wrap">
+                          {resultText}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="mt-8 text-center">
+                      <Button
+                        variant="outline"
+                        className="bg-gradient-to-r from-[hsl(45,60%,50%)] to-[hsl(45,80%,60%)] border-none text-black hover:bg-gradient-to-r hover:from-[hsl(45,60%,60%)] hover:to-[hsl(45,80%,70%)] h-12 px-8 font-medium transition-all duration-300"
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = resultImage;
+                          link.download = 'style-trying-result.jpg';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
+                      >
+                        {t('tryOn.downloadWork')}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -65,6 +65,9 @@ const Header = () => {
           <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">
             {t('header.home')}
           </Link>
+          <Link to="/community" className="text-sm font-medium hover:text-primary transition-colors">
+            {t('header.community')}
+          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
               {t('header.virtualTryOn')}
@@ -88,9 +91,6 @@ const Header = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Link to="/community" className="text-sm font-medium hover:text-primary transition-colors">
-            {t('header.community')}
-          </Link>
           <Link to="/brands" className="text-sm font-medium hover:text-primary transition-colors">
             {t('header.brands')}
           </Link>
@@ -111,11 +111,11 @@ const Header = () => {
             <Globe className="h-4 w-4" />
             {language === 'zh' ? 'EN' : '中'}
           </Button>
-          
+
           {user ? (
             <div className="flex items-center gap-3">
               {/* Notification Button */}
-               <Button
+              <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setNotificationOpen(true)}
@@ -123,8 +123,8 @@ const Header = () => {
               >
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
+                  <Badge
+                    variant="destructive"
                     className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -207,108 +207,110 @@ const Header = () => {
       </div>
 
       {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden border-t bg-background">
-          <div className="container py-4 space-y-4">
-            <nav className="space-y-3">
-              <Link to="/" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
-                {t('header.home')}
-              </Link>
-              <div>
-                <div className="text-sm font-medium text-muted-foreground mb-2">
-                  {t('header.virtualTryOn')}
+      {
+        isMenuOpen && (
+          <div className="md:hidden border-t bg-background">
+            <div className="container py-4 space-y-4">
+              <nav className="space-y-3">
+                <Link to="/" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
+                  {t('header.home')}
+                </Link>
+                <Link to="/community" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
+                  {t('header.community')}
+                </Link>
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground mb-2">
+                    {t('header.virtualTryOn')}
+                  </div>
+                  <div className="pl-4 space-y-2">
+                    <Link to="/virtual-tryron" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
+                      {t('header.tryNewItem')}
+                    </Link>
+                    <Link to="/style-trying" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
+                      {t('header.tryNewStyle')}
+                    </Link>
+                    <Link to="/better-than-model" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
+                      {t('header.tryModelOutfit')}
+                    </Link>
+                  </div>
                 </div>
-                <div className="pl-4 space-y-2">
-                  <Link to="/virtual-tryron" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
-                    {t('header.tryNewItem')}
-                  </Link>
-                  <Link to="/style-trying" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
-                    {t('header.tryNewStyle')}
-                  </Link>
-                  <Link to="/better-than-model" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
-                    {t('header.tryModelOutfit')}
-                  </Link>
-                </div>
-              </div>
-              <Link to="/community" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
-                {t('header.community')}
-              </Link>
-              <Link to="/brands" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
-                {t('header.brands')}
-              </Link>
-              <Link to="/celebrities" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
-                {t('header.celebrities')}
-              </Link>
-            </nav>
-            <div className="flex flex-col space-y-2">
-              
-              {user ? (
-                <div className="space-y-2">
-                  {/* Notification Button */}
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => {
-                      setNotificationOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full justify-start relative"
-                  >
-                    <Bell className="h-4 w-4 mr-2" />
-                    {t('header.notificationCenter')}
-                    {unreadCount > 0 && (
-                      <Badge 
-                        variant="destructive" 
-                        className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs"
-                      >
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                      </Badge>
-                    )}
-                  </Button>
+                <Link to="/brands" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
+                  {t('header.brands')}
+                </Link>
+                <Link to="/celebrities" className="block text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
+                  {t('header.celebrities')}
+                </Link>
+              </nav>
+              <div className="flex flex-col space-y-2">
 
-                  <Link to="/profile" className="block">
-                    <Button variant="ghost" size="sm" className="w-full justify-start">
-                      <User className="h-4 w-4 mr-2" />
-                      {t('header.profile')}
+                {user ? (
+                  <div className="space-y-2">
+                    {/* Notification Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setNotificationOpen(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full justify-start relative"
+                    >
+                      <Bell className="h-4 w-4 mr-2" />
+                      {t('header.notificationCenter')}
+                      {unreadCount > 0 && (
+                        <Badge
+                          variant="destructive"
+                          className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs"
+                        >
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </Badge>
+                      )}
                     </Button>
-                  </Link>
-                  {isAdmin && (
-                    <Link to="/admin" className="block">
+
+                    <Link to="/profile" className="block" onClick={() => setIsMenuOpen(false)}>
                       <Button variant="ghost" size="sm" className="w-full justify-start">
-                        <Shield className="h-4 w-4 mr-2" />
-                        {t('header.adminDashboard')}
+                        <User className="h-4 w-4 mr-2" />
+                        {t('header.profile')}
                       </Button>
                     </Link>
-                  )}
-                  <Button variant="outline" size="sm" onClick={signOut} className="w-full justify-start">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    {t('header.logout')}
-                  </Button>
-                </div>
-              ) : (
-                <Link to="/auth" state={{ from: location.pathname }}>
-                  <Button variant="outline" size="sm" className="text-black border-black hover:bg-black hover:text-white">
-                    <User className="h-4 w-4 mr-2" />
-                    {t('header.login')}
-                  </Button>
-                </Link>
-              )}
+                    {isAdmin && (
+                      <Link to="/admin" className="block" onClick={() => setIsMenuOpen(false)}>
+                        <Button variant="ghost" size="sm" className="w-full justify-start">
+                          <Shield className="h-4 w-4 mr-2" />
+                          {t('header.adminDashboard')}
+                        </Button>
+                      </Link>
+                    )}
+                    <Button variant="outline" size="sm" onClick={() => { signOut(); setIsMenuOpen(false); }} className="w-full justify-start">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      {t('header.logout')}
+                    </Button>
+                  </div>
+                ) : (
+                  <Link to="/auth" state={{ from: location.pathname }} onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="outline" size="sm" className="text-black border-black hover:bg-black hover:text-white">
+                      <User className="h-4 w-4 mr-2" />
+                      {t('header.login')}
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Notification Center */}
-      <NotificationCenter 
-        open={notificationOpen} 
+      <NotificationCenter
+        open={notificationOpen}
         onOpenChange={(open) => {
           setNotificationOpen(open);
           if (!open) {
             fetchUnreadCount();
           }
-        }} 
+        }}
       />
-    </header>
+    </header >
   );
 };
 
