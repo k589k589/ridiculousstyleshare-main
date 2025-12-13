@@ -21,6 +21,11 @@ import clothingCase3Basketball from "@/assets/clothing-case3-basketball.png";
 import resultCase3Basketball from "@/assets/result-case3-basketball.jpg";
 import rssWatermark from "@/assets/rss-watermark.png";
 
+import vtoShowcaseOriginal from "@/assets/vto-showcase-original.jpg";
+import vtoShowcaseItem from "@/assets/vto-showcase-item.jpg";
+import vtoShowcaseResult from "@/assets/vto-showcase-result.png";
+import TransformationShowcase from "@/components/TransformationShowcase";
+
 const VirtualTryOn = () => {
   const [bodyPhoto, setBodyPhoto] = useState<File | null>(null);
   const [clothingPhoto, setClothingPhoto] = useState<File | null>(null);
@@ -689,6 +694,12 @@ const VirtualTryOn = () => {
               <div className="w-2 h-2 bg-[hsl(45,60%,50%)] rounded-full animate-pulse"></div>
             </div>
           </div>
+
+          <TransformationShowcase
+            originalImage={vtoShowcaseOriginal}
+            targetImage={vtoShowcaseItem}
+            resultImage={vtoShowcaseResult}
+          />
 
           <div className="grid grid-cols-1 gap-8 mb-20 max-w-none w-full">
             {/* Body Photo Upload */}
