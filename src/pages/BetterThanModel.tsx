@@ -802,7 +802,7 @@ const VirtualTryOn = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden bg-[#050505]">
+    <div className="min-h-screen relative bg-[#050505]">
       {/* Luxury Dressing Room Background - Deep Black Theme */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-neutral-900/20 via-black to-black"></div>
 
