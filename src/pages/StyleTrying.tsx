@@ -8,6 +8,12 @@ import { useNativeCamera } from "@/hooks/useNativeCamera";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 import rssWatermark from "@/assets/rss-watermark.png";
+import GridTransformationShowcase from "@/components/GridTransformationShowcase";
+import styleTryingOriginal from "@/assets/style-trying-original.png";
+import styleTryingResult1 from "@/assets/style-trying-result-1.png";
+import styleTryingResult2 from "@/assets/style-trying-result-2.png";
+import styleTryingResult3 from "@/assets/style-trying-result-3.png";
+import styleTryingResult4 from "@/assets/style-trying-result-4.png";
 import {
   Select,
   SelectContent,
@@ -669,6 +675,19 @@ const StyleTrying = () => {
             )}
 
 
+          </div>
+
+          {/* Grid Style Showcase */}
+          <div className="mb-20">
+            <GridTransformationShowcase
+              originalImage={styleTryingOriginal}
+              resultImages={[
+                styleTryingResult1,
+                styleTryingResult2,
+                styleTryingResult3,
+                styleTryingResult4
+              ]}
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-8 mb-20 max-w-none w-full">
