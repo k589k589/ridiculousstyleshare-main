@@ -759,9 +759,6 @@ const VirtualTryOn = () => {
                 <h3 className="text-2xl font-playfair text-white mb-2 group-hover:text-[hsl(45,60%,50%)] transition-colors duration-300">
                   {t('virtualTryOn.personalPhoto')}
                 </h3>
-                <p className="text-white/70 text-base font-light">
-                  {t('virtualTryOn.uploadPhoto')}
-                </p>
               </div>
 
               <div className="space-y-6 relative z-10 px-6">
@@ -861,9 +858,6 @@ const VirtualTryOn = () => {
                 <h3 className="text-2xl font-playfair text-white mb-2 group-hover:text-[hsl(30,60%,60%)] transition-colors duration-300">
                   {t('betterThanModel.modelOutfits')}
                 </h3>
-                <p className="text-white/70 text-base font-light">
-                  {t('betterThanModel.selectModelOutfit')}
-                </p>
               </div>
 
               <div className="space-y-6 relative z-10 px-6">
