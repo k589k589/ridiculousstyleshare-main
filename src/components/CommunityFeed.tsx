@@ -898,9 +898,6 @@ const CommunityFeed = () => {
                             <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rotate-45"></div>
                           </div>
                         )}
-                        {showTryGuide && index === 0 && (
-                          <div className="fixed inset-0 bg-black/10 z-10 pointer-events-none" />
-                        )}
                       </div>
 
                       <Button
