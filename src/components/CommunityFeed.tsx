@@ -882,7 +882,7 @@ const CommunityFeed = () => {
                           variant="outline"
                           size="sm"
                           className={`flex items-center gap-1 px-4 py-1 border-2 font-semibold transition-all duration-200 ${showTryGuide && index === 0
-                            ? 'border-primary bg-primary text-primary-foreground animate-pulse shadow-[0_0_15px_rgba(255,107,53,0.5)] z-20 relative'
+                            ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_15px_rgba(255,107,53,0.5)] z-20 relative animate-bounce'
                             : 'border-primary text-primary hover:bg-primary hover:text-primary-foreground'
                             }`}
                           onClick={() => handleTryClick(outfit)}
@@ -893,8 +893,8 @@ const CommunityFeed = () => {
 
                         {/* Guide Tooltip */}
                         {showTryGuide && index === 0 && (
-                          <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-foreground text-background text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-xl z-30 animate-bounce">
-                            試穿這套看看!
+                          <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-foreground text-background text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-xl z-30 animate-in fade-in zoom-in duration-300">
+                            {t('community.tryGuide')}
                             <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rotate-45"></div>
                           </div>
                         )}

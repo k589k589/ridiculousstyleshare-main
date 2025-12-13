@@ -244,7 +244,7 @@ const translations = {
     'community.noMoreContent': '已經沒有更多內容了 🎉',
     'community.tryTooltip': '試試這個風格',
     'community.reportTooltip': '舉報',
-    'community.shareTooltip': '分享',
+    'community.tryGuide': '點擊就可以試穿',
     'community.bookmarkTooltip': '收藏',
     'community.unbookmarkTooltip': '取消收藏',
 
@@ -729,7 +729,7 @@ const translations = {
     'community.noMoreContent': 'No more content 🎉',
     'community.tryTooltip': 'Try this style',
     'community.reportTooltip': 'Report',
-    'community.shareTooltip': 'Share',
+    'community.tryGuide': 'Click to try on',
     'community.bookmarkTooltip': 'Bookmark',
     'community.unbookmarkTooltip': 'Remove Bookmark',
 
