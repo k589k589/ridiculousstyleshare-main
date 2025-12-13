@@ -22,7 +22,7 @@ import resultCase3Basketball from "@/assets/result-case3-basketball.jpg";
 import rssWatermark from "@/assets/rss-watermark.png";
 
 import vtoShowcaseOriginal from "@/assets/vto-showcase-original.jpg";
-import vtoShowcaseItem from "@/assets/vto-showcase-item.jpg";
+import vtoShowcaseItem from "@/assets/vto-showcase-item.png";
 import vtoShowcaseResult from "@/assets/vto-showcase-result.png";
 import TransformationShowcase from "@/components/TransformationShowcase";
 
