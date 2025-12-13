@@ -77,7 +77,7 @@ const ParallaxShowcase = () => {
         <div className="flex flex-col items-center justify-center w-full h-full">
 
           {/* CASE 1 (Top - Mountain guy) */}
-          <div className="relative w-full h-[85vh] px-2">
+          <div className="relative w-full h-screen">
             <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
               <img
                 ref={originalRef3}
@@ -97,7 +97,7 @@ const ParallaxShowcase = () => {
           </div>
 
           {/* CASE 2 (Bottom - Model) */}
-          <div className="relative w-full h-[85vh] px-2">
+          <div className="relative w-full h-screen">
             <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
               <img
                 ref={originalRef4}
