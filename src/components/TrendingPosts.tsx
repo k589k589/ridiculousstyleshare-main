@@ -173,12 +173,27 @@ const TrendingPosts = () => {
     setDetailOpen(true);
   };
 
-  const handleLikeChange = (outfitId: string, isLiked: boolean) => {
-    setTrendingOutfits(prev => prev.map(o =>
-      o.id === outfitId
-        ? { ...o, is_liked: isLiked, likes_count: isLiked ? o.likes_count + 1 : o.likes_count - 1 }
-        : o
-    ));
+  // Guide state - shares the same localStorage key with CommunityFeed
+  const [showTryGuide, setShowTryGuide] = useState(false);
+
+  useEffect(() => {
+    const hasSeenGuide = localStorage.getItem('rss_community_try_guide_shown');
+    // Only show if data is loaded and there are items
+    if (!hasSeenGuide && !loading && trendingOutfits.length > 0) {
+      // Small delay to ensure render
+      const timer = setTimeout(() => {
+        setShowTryGuide(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, trendingOutfits.length]);
+
+  const handleTryClick = (outfit: TrendingOutfit) => {
+    if (showTryGuide) {
+      setShowTryGuide(false);
+      localStorage.setItem('rss_community_try_guide_shown', 'true');
+    }
+    setTryOnConfirmDialog({ open: true, outfit });
   };
 
   if (loading) {
@@ -352,17 +367,35 @@ const TrendingPosts = () => {
                           </div>
                         );
                       })()}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-3 border border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold text-xs"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setTryOnConfirmDialog({ open: true, outfit });
-                        }}
-                      >
-                        Try
-                      </Button>
+
+                      <div className="relative">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={`h-7 px-3 border-2 font-semibold text-xs transition-all duration-200 ${showTryGuide && index === 0
+                            ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_15px_rgba(255,107,53,0.5)] z-20 relative animate-bounce'
+                            : 'border-primary text-primary hover:bg-primary hover:text-primary-foreground'
+                            }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTryClick(outfit);
+                          }}
+                          title={t('community.tryTooltip')}
+                        >
+                          {t('community.try')}
+                        </Button>
+
+                        {/* Guide Tooltip */}
+                        {showTryGuide && index === 0 && (
+                          <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-foreground text-background text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-xl z-30 animate-in fade-in zoom-in duration-300">
+                            {t('community.tryGuide')}
+                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rotate-45"></div>
+                          </div>
+                        )}
+                        {showTryGuide && index === 0 && (
+                          <div className="fixed inset-0 bg-black/10 z-10 pointer-events-none" />
+                        )}
+                      </div>
                     </div>
                     <span>
                       {new Date(outfit.created_at).toLocaleDateString('zh-TW', {
@@ -389,13 +422,13 @@ const TrendingPosts = () => {
       <AlertDialog open={tryOnConfirmDialog.open} onOpenChange={(open) => setTryOnConfirmDialog({ ...tryOnConfirmDialog, open })}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>試試這個風格？</AlertDialogTitle>
+            <AlertDialogTitle>{t('community.tryOnConfirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              將會自動跳轉到換裝頁面，並載入這件穿搭照片。您只需要上傳自己的照片就可以嘗試換裝了！
+              {t('community.tryOnConfirmDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('community.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={async () => {
               if (tryOnConfirmDialog.outfit) {
                 // Increment try count
@@ -413,7 +446,7 @@ const TrendingPosts = () => {
               }
               setTryOnConfirmDialog({ open: false, outfit: null });
             }}>
-              Yes
+              {t('community.yes')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
