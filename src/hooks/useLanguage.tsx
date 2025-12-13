@@ -820,7 +820,7 @@ const translations = {
     'styleChanger.selectGender': 'Select Gender',
     'styleChanger.male': 'Male',
     'styleChanger.female': 'Female',
-    'styleChanger.missionTitle': 'Our mission is to make you more confident',
+    'styleChanger.missionTitle': 'More outfit More confidence',
     'styleChanger.missionText': '',
     'styleChanger.startJourney': 'Start Your Journey',
     'styleChanger.transformShowcaseTitle': 'Transformation Showcase',
@@ -830,8 +830,8 @@ const translations = {
 
     // Style Trying
     'styleTrying.title': 'Try New Style',
-    'styleTrying.subtitle': 'Upload your photo, choose your favorite style and brand',
-    'styleTrying.uploadBody': '換你試試',
+    'styleTrying.subtitle': 'Try a new style here',
+    'styleTrying.uploadBody': 'Your Turn',
     'styleTrying.uploadDesc': '',
     'styleTrying.selectGender': 'Select Your Gender',
     'styleTrying.selectGenderPlaceholder': 'Select gender',
