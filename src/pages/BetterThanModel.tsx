@@ -43,38 +43,36 @@ const TransformationShowcase = () => {
       const totalHeight = rect.height - viewportHeight;
       const overallProgress = Math.max(0, Math.min(1, distance / totalHeight));
 
-      // Curtain Reveal Logic:
-      // 0-35%: Original is visible. Target is hidden below.
-      // 35-65%: Target slides UP over Original.
-      // 65-100%: Result slides UP over Target.
+      // Curtain Reveal Logic (Extended Height):
+      // 0-30%: Original is visible.
+      // 30-55%: Target slides UP over Original.
+      // 55-80%: Result slides UP over Target.
+      // 80-100%: Result stays visible.
 
       // Labels
-      if (overallProgress < 0.35) setActiveStep(0);
-      else if (overallProgress < 0.65) setActiveStep(1);
+      if (overallProgress < 0.3) setActiveStep(0);
+      else if (overallProgress < 0.55) setActiveStep(1);
       else setActiveStep(2);
 
-      // Target Animation (Slides up 0.35 -> 0.55)
+      // Target Animation (Slides up 0.2 -> 0.45)
       if (targetRef.current) {
-        // Start sliding at 0.25, finish at 0.55
-        // Progress within phase
+        // Start sliding earlier to give more "settle" time
         let p = 0;
-        if (overallProgress < 0.25) p = 0;
-        else if (overallProgress > 0.55) p = 1;
-        else p = (overallProgress - 0.25) / 0.3; // 0.3 duration
+        if (overallProgress < 0.2) p = 0;
+        else if (overallProgress > 0.45) p = 1;
+        else p = (overallProgress - 0.2) / 0.25;
 
-        // Easing (smooth out)
         const ease = 1 - Math.pow(1 - p, 3);
         const translateY = (1 - ease) * 100;
         targetRef.current.style.transform = `translateY(${translateY}%)`;
       }
 
-      // Result Animation (Slides up 0.55 -> 0.85)
+      // Result Animation (Slides up 0.45 -> 0.7)
       if (resultRef.current) {
-        // Start sliding at 0.55, finish at 0.85
         let p = 0;
-        if (overallProgress < 0.55) p = 0;
-        else if (overallProgress > 0.85) p = 1;
-        else p = (overallProgress - 0.55) / 0.3;
+        if (overallProgress < 0.45) p = 0;
+        else if (overallProgress > 0.7) p = 1;
+        else p = (overallProgress - 0.45) / 0.25;
 
         const ease = 1 - Math.pow(1 - p, 3);
         const translateY = (1 - ease) * 100;
@@ -88,16 +86,16 @@ const TransformationShowcase = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative h-[350vh] z-20 pointer-events-none">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center bg-black">
+    <section ref={sectionRef} className="relative h-[500vh] z-20 pointer-events-none">
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center bg-[#050505]">
 
         {/* Dynamic Header */}
-        <div className="absolute top-0 w-full z-40 p-8 text-center bg-gradient-to-b from-black/80 to-transparent">
-          <div className="inline-block px-4 py-2 rounded-full border border-white/10 bg-black/40 backdrop-blur-md transition-all duration-500">
-            <span className="text-white text-sm font-light tracking-[0.2em] uppercase">
-              {activeStep === 0 && "Step 1: The Original"}
-              {activeStep === 1 && "Step 2: Choose Style"}
-              {activeStep === 2 && "Step 3: The Result"}
+        <div className="absolute top-0 w-full z-40 p-8 text-center bg-gradient-to-b from-[#050505]/90 to-transparent">
+          <div className="inline-block px-6 py-3 rounded-full border border-white/5 bg-black/60 backdrop-blur-md transition-all duration-500 shadow-2xl">
+            <span className="text-white/90 text-sm font-medium tracking-[0.25em] uppercase">
+              {activeStep === 0 && <span className="animate-fade-in">Phase 1: Analysis</span>}
+              {activeStep === 1 && <span className="animate-fade-in">Phase 2: Selection</span>}
+              {activeStep === 2 && <span className="animate-fade-in">Phase 3: Transformation</span>}
             </span>
           </div>
         </div>
@@ -106,22 +104,22 @@ const TransformationShowcase = () => {
         <div className="relative w-full h-full max-w-lg mx-auto md:max-w-2xl lg:max-w-4xl">
 
           {/* Layer 1: Bottom (Original) - Always there, z-10 */}
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-900">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#050505]">
             <img
               src={btmOriginal}
               alt="Original"
-              className="w-full h-full object-cover md:object-contain opacity-90"
+              className="w-full h-full object-cover md:object-contain opacity-80"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute bottom-20 left-8 z-10">
-              <h3 className="text-4xl md:text-6xl font-playfair text-white opacity-40 font-bold">Original</h3>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent pointer-events-none" />
+            <div className="absolute bottom-24 left-8 z-10">
+              <h3 className="text-5xl md:text-7xl font-playfair text-white/30 font-bold tracking-tighter">Original</h3>
             </div>
           </div>
 
           {/* Layer 2: Middle (Target) - Slides up, z-20 */}
           <div
             ref={targetRef}
-            className="absolute inset-0 z-20 flex items-center justify-center bg-zinc-800 shadow-[0_-25px_50px_-12px_rgba(0,0,0,0.8)] will-change-transform"
+            className="absolute inset-0 z-20 flex items-center justify-center bg-[#0A0A0A] shadow-[0_-50px_100px_rgba(0,0,0,0.9)] will-change-transform border-t border-white/5"
             style={{ transform: 'translateY(100%)' }}
           >
             <img
@@ -129,17 +127,17 @@ const TransformationShowcase = () => {
               alt="Target Style"
               className="w-full h-full object-cover md:object-contain"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute bottom-20 left-8 z-10">
-              <h3 className="text-4xl md:text-6xl font-playfair text-white font-bold">Target</h3>
-              <p className="text-white/60 mt-2 font-light tracking-wide">Select your desired vibe</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent pointer-events-none" />
+            <div className="absolute bottom-24 left-8 z-10">
+              <h3 className="text-5xl md:text-7xl font-playfair text-white font-bold tracking-tighter">Target</h3>
+              <p className="text-white/50 mt-2 text-lg font-light tracking-widest uppercase">The Desired Vibe</p>
             </div>
           </div>
 
           {/* Layer 3: Top (Result) - Slides up, z-30 */}
           <div
             ref={resultRef}
-            className="absolute inset-0 z-30 flex items-center justify-center bg-black shadow-[0_-25px_50px_-12px_rgba(0,0,0,1)] will-change-transform"
+            className="absolute inset-0 z-30 flex items-center justify-center bg-[#050505] shadow-[0_-50px_100px_rgba(0,0,0,1)] will-change-transform border-t border-white/10"
             style={{ transform: 'translateY(100%)' }}
           >
             <img
@@ -147,15 +145,15 @@ const TransformationShowcase = () => {
               alt="Result"
               className="w-full h-full object-cover md:object-contain"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/10 to-transparent pointer-events-none mix-blend-overlay" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none mix-blend-overlay" />
 
-            <div className="absolute bottom-20 left-8 z-10">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="h-px w-12 bg-[#FFD700]" />
-                <span className="text-[#FFD700] tracking-widest uppercase text-sm font-bold">Transformation Complete</span>
+            <div className="absolute bottom-24 left-8 z-10">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-px w-20 bg-amber-500" />
+                <span className="text-amber-500 tracking-[0.3em] uppercase text-xs font-bold">RSS Exclusive</span>
               </div>
-              <h3 className="text-4xl md:text-6xl font-playfair text-white font-bold">New Look</h3>
+              <h3 className="text-5xl md:text-7xl font-playfair text-white font-bold tracking-tighter">The Result</h3>
             </div>
           </div>
 
@@ -803,14 +801,12 @@ const VirtualTryOn = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Luxury Dressing Room Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,15%,15%)] via-[hsl(210,20%,8%)] to-[hsl(220,20%,5%)]"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_80%,rgba(197,149,96,0.08),transparent_50%)]"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.02),transparent_50%)]"></div>
+    <div className="min-h-screen relative overflow-x-hidden bg-[#050505]">
+      {/* Luxury Dressing Room Background - Deep Black Theme */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-neutral-900/20 via-black to-black"></div>
 
       {/* Subtle texture overlay */}
-      <div className="absolute inset-0 opacity-30" style={{
+      <div className="absolute inset-0 opacity-20" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
       }}></div>
 
