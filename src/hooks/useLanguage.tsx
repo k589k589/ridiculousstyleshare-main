@@ -353,7 +353,7 @@ const translations = {
     // Style Changer
     'styleChanger.title': '即刻改造自己',
     'styleChanger.subtitle': 'Upload your selfie and get a new YOU!',
-    'styleChanger.uploadPhoto': 'Your turn',
+    'styleChanger.uploadPhoto': '換你來試試',
     'styleChanger.mission': '我們的任務是讓你知道你能多好看',
     'styleChanger.quickAction1': '即刻改造自己',
     'styleChanger.quickAction2': '試穿室',
