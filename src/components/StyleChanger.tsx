@@ -271,7 +271,7 @@ const StyleChanger = () => {
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative h-full flex items-center justify-center text-center px-4">
           <div className="max-w-4xl space-y-8 animate-fade-in">
-            <h2 className="text-xl md:text-3xl lg:text-4xl font-bold text-white tracking-wider whitespace-nowrap">
+            <h2 className="text-xl md:text-3xl lg:text-4xl font-playfair italic font-medium text-white tracking-wider whitespace-nowrap">
               {t('styleChanger.missionTitle')}
             </h2>
             <Button
