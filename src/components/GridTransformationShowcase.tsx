@@ -79,10 +79,7 @@ const GridTransformationShowcase = ({ originalImage, resultImages }: GridTransfo
                                 className="w-full h-full object-contain max-w-4xl mx-auto"
                             />
 
-                            {/* Floating Label for Original */}
-                            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10">
-                                <span className="text-white font-playfair text-xl tracking-wider">Original Look</span>
-                            </div>
+
                         </div>
                     </div>
 
