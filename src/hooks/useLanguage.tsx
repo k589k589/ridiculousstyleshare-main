@@ -282,7 +282,7 @@ const translations = {
     'tryOn.perfectResult': '完美呈現的虛擬試穿效果',
     'tryOn.tryOnCompleted': '✨ 專屬試穿完成',
     'tryOn.perfectDisplay': '✨ 完美呈現',
-    'tryOn.subtitle': '以後連網購都能問，好看嗎？',
+    'tryOn.subtitle': '在社群媒體上看到喜歡的穿搭?馬上試',
 
     // Case study labels
     'case.originalPhoto': '原始照片',
