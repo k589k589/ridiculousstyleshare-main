@@ -581,6 +581,30 @@ const CommunityFeed = () => {
     }
   };
 
+  // Guide state
+  const [showTryGuide, setShowTryGuide] = useState(false);
+
+  useEffect(() => {
+    const hasSeenGuide = localStorage.getItem('rss_community_try_guide_shown');
+    if (!hasSeenGuide && !loading && outfits.length > 0) {
+      // Small delay to ensure render
+      const timer = setTimeout(() => {
+        setShowTryGuide(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, outfits.length]);
+
+  const handleTryClick = (outfit: Outfit) => {
+    if (showTryGuide) {
+      setShowTryGuide(false);
+      localStorage.setItem('rss_community_try_guide_shown', 'true');
+    }
+    setTryOnConfirmDialog({ open: true, outfit });
+  };
+
+  // ... (keep existing code)
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -601,6 +625,7 @@ const CommunityFeed = () => {
     <div className="space-y-6">
       {/* Search and Filter Section */}
       <div className="bg-card rounded-lg p-6 shadow-md space-y-4" id="search-section">
+        {/* ... (existing search section code) ... */}
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Simplified Search Input */}
           <div className="flex-1">
@@ -710,7 +735,7 @@ const CommunityFeed = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {outfits.map((outfit) => (
+            {outfits.map((outfit, index) => (
               <Card key={outfit.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="relative">
                   <AspectRatio ratio={4 / 5}>
@@ -815,7 +840,7 @@ const CommunityFeed = () => {
 
                       {(() => {
                         const count = outfit.try_count || 0;
-                        // Heatmap colors: 0=blue, 5=cyan, 10=green, 20=yellow, 50+=red
+                        // Heatmap colors
                         let bgColor, textColor, borderColor;
                         if (count === 0) {
                           bgColor = 'from-blue-500/20 to-blue-400/10';
@@ -852,15 +877,31 @@ const CommunityFeed = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1 px-4 py-1 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold transition-all duration-200"
-                        onClick={() => setTryOnConfirmDialog({ open: true, outfit })}
-                        title={t('community.tryTooltip')}
-                      >
-                        {t('community.try')}
-                      </Button>
+                      <div className="relative">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={`flex items-center gap-1 px-4 py-1 border-2 font-semibold transition-all duration-200 ${showTryGuide && index === 0
+                            ? 'border-primary bg-primary text-primary-foreground animate-pulse shadow-[0_0_15px_rgba(255,107,53,0.5)] z-20 relative'
+                            : 'border-primary text-primary hover:bg-primary hover:text-primary-foreground'
+                            }`}
+                          onClick={() => handleTryClick(outfit)}
+                          title={t('community.tryTooltip')}
+                        >
+                          {t('community.try')}
+                        </Button>
+
+                        {/* Guide Tooltip */}
+                        {showTryGuide && index === 0 && (
+                          <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-foreground text-background text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-xl z-30 animate-bounce">
+                            試穿這套看看!
+                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rotate-45"></div>
+                          </div>
+                        )}
+                        {showTryGuide && index === 0 && (
+                          <div className="fixed inset-0 bg-black/10 z-10 pointer-events-none" />
+                        )}
+                      </div>
 
                       <Button
                         variant="ghost"
