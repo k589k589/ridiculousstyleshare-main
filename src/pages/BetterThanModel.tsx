@@ -21,6 +21,130 @@ import clothingCase3Basketball from "@/assets/clothing-case3-basketball.png";
 import resultCase3Basketball from "@/assets/result-case3-basketball.jpg";
 import rssWatermark from "@/assets/rss-watermark.png";
 
+// BTM Showcase images
+import btmOriginal from "@/assets/btm-original.png";
+import btmTarget from "@/assets/btm-target.png";
+import btmResult from "@/assets/btm-result.png";
+
+// 3-Step Transformation Showcase Component
+const TransformationShowcase = () => {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const originalRef = useRef<HTMLImageElement>(null);
+  const targetRef = useRef<HTMLImageElement>(null);
+  const resultRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!sectionRef.current) return;
+
+      const rect = sectionRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const distance = -rect.top;
+      const totalHeight = rect.height - viewportHeight;
+      const overallProgress = Math.max(0, Math.min(1, distance / totalHeight));
+
+      // Phase 1: Original visible (0-30%), then fades out (30-40%)
+      // Phase 2: Target slides in (30-40%), visible (40-60%), fades out (60-70%)
+      // Phase 3: Result zooms in (60-70%), visible (70-100%)
+
+      // Original photo
+      if (originalRef.current) {
+        const originalOpacity = overallProgress < 0.3
+          ? 1
+          : overallProgress < 0.4
+            ? 1 - (overallProgress - 0.3) * 10
+            : 0;
+        const originalScale = 1 - overallProgress * 0.1;
+        originalRef.current.style.opacity = `${originalOpacity}`;
+        originalRef.current.style.transform = `scale(${originalScale}) translateX(${overallProgress < 0.35 ? 0 : -(overallProgress - 0.35) * 300}px)`;
+      }
+
+      // Target outfit (slides in from right)
+      if (targetRef.current) {
+        const targetSlideIn = overallProgress < 0.25 ? 100 : overallProgress < 0.4 ? 100 - (overallProgress - 0.25) * 666 : 0;
+        const targetOpacity = overallProgress < 0.25
+          ? 0
+          : overallProgress < 0.4
+            ? (overallProgress - 0.25) * 6.67
+            : overallProgress < 0.6
+              ? 1
+              : overallProgress < 0.7
+                ? 1 - (overallProgress - 0.6) * 10
+                : 0;
+        targetRef.current.style.opacity = `${targetOpacity}`;
+        targetRef.current.style.transform = `translateX(${targetSlideIn}px)`;
+      }
+
+      // Result (zooms in from center)
+      if (resultRef.current) {
+        const resultOpacity = overallProgress < 0.55
+          ? 0
+          : overallProgress < 0.7
+            ? (overallProgress - 0.55) * 6.67
+            : 1;
+        const resultScale = overallProgress < 0.55
+          ? 0.8
+          : overallProgress < 0.7
+            ? 0.8 + (overallProgress - 0.55) * 1.33
+            : 1;
+        resultRef.current.style.opacity = `${resultOpacity}`;
+        resultRef.current.style.transform = `scale(${resultScale})`;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <section ref={sectionRef} className="relative h-[400vh] z-20 pointer-events-none">
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
+
+        {/* Step labels */}
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-30 text-center">
+          <p className="text-white/60 text-sm tracking-widest uppercase">Transformation Showcase</p>
+        </div>
+
+        {/* Original Photo */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img
+            ref={originalRef}
+            src={btmOriginal}
+            alt="Original"
+            className="max-w-full max-h-full object-contain will-change-transform"
+            style={{ maxHeight: '80vh', maxWidth: '90vw' }}
+          />
+        </div>
+
+        {/* Target Outfit */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img
+            ref={targetRef}
+            src={btmTarget}
+            alt="Target Outfit"
+            className="max-w-full max-h-full object-contain opacity-0 will-change-transform"
+            style={{ maxHeight: '80vh', maxWidth: '90vw' }}
+          />
+        </div>
+
+        {/* Result */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img
+            ref={resultRef}
+            src={btmResult}
+            alt="Result"
+            className="max-w-full max-h-full object-contain opacity-0 will-change-transform"
+            style={{ maxHeight: '80vh', maxWidth: '90vw' }}
+          />
+        </div>
+
+      </div>
+    </section>
+  );
+};
+
+
 const VirtualTryOn = () => {
   const [bodyPhoto, setBodyPhoto] = useState<File | null>(null);
   const [clothingPhoto, setClothingPhoto] = useState<File | null>(null);
@@ -721,6 +845,9 @@ const VirtualTryOn = () => {
               <div className="w-2 h-2 bg-[hsl(45,60%,50%)] rounded-full animate-pulse"></div>
             </div>
           </div>
+
+          {/* Transformation Showcase */}
+          <TransformationShowcase />
 
           <div className="grid grid-cols-1 gap-8 mb-20 max-w-none w-full">
             {/* Body Photo Upload */}
