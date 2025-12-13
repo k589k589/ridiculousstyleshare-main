@@ -443,22 +443,22 @@ const StyleChanger = () => {
                   <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                     <Button
                       onClick={() => {
-                        document.getElementById('transform-style-button')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        navigate('/community');
                       }}
                       className="bg-gradient-to-r from-primary to-orange-400 hover:from-orange-500 hover:to-primary text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-300"
                       size="lg"
                     >
-                      {t('styleChanger.tryAgain')}
+                      社群逛逛
                     </Button>
                     <Button
                       onClick={() => {
                         const tryOnSection = document.querySelector('[data-section="virtual-tryon"]');
                         tryOnSection?.scrollIntoView({ behavior: 'smooth' });
                       }}
-                      className="bg-gradient-to-r from-primary to-orange-400 hover:from-orange-500 hover:to-primary text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-300"
+                      className="bg-transparent border-2 border-white/30 hover:bg-white/10 text-white rounded-xl font-bold transform hover:scale-105 transition-all duration-300"
                       size="lg"
                     >
-                      {t('styleChanger.trySpecific')}
+                      試試其他試穿功能
                     </Button>
                     <Button
                       onClick={() => {
@@ -469,7 +469,7 @@ const StyleChanger = () => {
                         link.click();
                         document.body.removeChild(link);
                       }}
-                      className="bg-gradient-to-r from-primary to-orange-400 hover:from-orange-500 hover:to-primary text-white rounded-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-300"
+                      className="bg-transparent border-2 border-white/30 hover:bg-white/10 text-white rounded-xl font-bold transform hover:scale-105 transition-all duration-300"
                       size="lg"
                     >
                       {t('styleChanger.downloadShare')}
