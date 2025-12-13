@@ -1,4 +1,4 @@
-import { Camera, Instagram, Linkedin, Mail } from "lucide-react";
+import { Camera, Instagram, Linkedin, Mail, Twitter } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 
 const Footer = () => {
@@ -26,6 +26,9 @@ const Footer = () => {
               <a href="https://www.linkedin.com/company/rsscommunity" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
                 <Linkedin className="h-5 w-5" />
               </a>
+              <a href="https://x.com/Ridiculous26219" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                <Twitter className="h-5 w-5" />
+              </a>
             </div>
           </div>
 
@@ -35,6 +38,10 @@ const Footer = () => {
             <div className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
               <Mail className="h-5 w-5" />
               <a href="mailto:ridiculousstylesharing@gmail.com">ridiculousstylesharing@gmail.com</a>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mt-2">
+              <Mail className="h-5 w-5" />
+              <a href="mailto:k589k589@gmail.com">k589k589@gmail.com</a>
             </div>
           </div>
         </div>
