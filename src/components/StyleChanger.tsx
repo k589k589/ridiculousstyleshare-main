@@ -41,28 +41,37 @@ const ParallaxShowcase = () => {
       // Split scroll into two phases: 0-50% for case 1, 50-100% for case 2
       const overallProgress = Math.max(0, Math.min(1, distance / totalHeight));
 
-      // Case 1 progress (0 to 1 during first half of scroll)
-      const progress1 = Math.max(0, Math.min(1, overallProgress * 2));
-      // Case 2 progress (0 to 1 during second half of scroll)
-      const progress2 = Math.max(0, Math.min(1, (overallProgress - 0.5) * 2));
+      // Case 1: visible from 0-50%, transform during 0-40%, fade out 40-50%
+      const phase1Progress = Math.max(0, Math.min(1, overallProgress * 2.5)); // Transform from 0-40%
+      const phase1Fade = overallProgress < 0.4 ? 1 : Math.max(0, 1 - (overallProgress - 0.4) * 10); // Fade out 40-50%
 
-      // Helper for animation
-      const animatePair = (orig: HTMLImageElement | null, res: HTMLImageElement | null, progress: number) => {
-        if (orig) {
-          orig.style.transform = `translateY(${progress * -30}px) scale(${1 - progress * 0.05})`;
-          orig.style.opacity = `${1 - Math.pow(progress, 2)}`;
-        }
-        if (res) {
-          const slideUp = 80 - (progress * 80);
-          const scale = 0.9 + (progress * 0.1);
-          res.style.transform = `translateY(${slideUp}px) scale(${scale})`;
-          res.style.opacity = `${Math.pow(progress, 1.5)}`;
-        }
-      };
+      // Case 2: fade in 45-55%, transform during 50-100%
+      const phase2Fade = overallProgress < 0.45 ? 0 : Math.min(1, (overallProgress - 0.45) * 10); // Fade in
+      const phase2Progress = Math.max(0, Math.min(1, (overallProgress - 0.5) * 2)); // Transform from 50-100%
 
-      // Animate each case with its own progress
-      animatePair(originalRef3.current, resultRef3.current, progress1);
-      animatePair(originalRef4.current, resultRef4.current, progress2);
+      // Animate Case 1
+      if (originalRef3.current) {
+        originalRef3.current.style.transform = `translateY(${phase1Progress * -30}px) scale(${1 - phase1Progress * 0.05})`;
+        originalRef3.current.style.opacity = `${phase1Fade * (1 - Math.pow(phase1Progress, 2))}`;
+      }
+      if (resultRef3.current) {
+        const slideUp = 80 - (phase1Progress * 80);
+        const scale = 0.9 + (phase1Progress * 0.1);
+        resultRef3.current.style.transform = `translateY(${slideUp}px) scale(${scale})`;
+        resultRef3.current.style.opacity = `${phase1Fade * Math.pow(phase1Progress, 1.5)}`;
+      }
+
+      // Animate Case 2
+      if (originalRef4.current) {
+        originalRef4.current.style.transform = `translateY(${phase2Progress * -30}px) scale(${1 - phase2Progress * 0.05})`;
+        originalRef4.current.style.opacity = `${phase2Fade * (1 - Math.pow(phase2Progress, 2))}`;
+      }
+      if (resultRef4.current) {
+        const slideUp = 80 - (phase2Progress * 80);
+        const scale = 0.9 + (phase2Progress * 0.1);
+        resultRef4.current.style.transform = `translateY(${slideUp}px) scale(${scale})`;
+        resultRef4.current.style.opacity = `${phase2Fade * Math.pow(phase2Progress, 1.5)}`;
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -71,52 +80,53 @@ const ParallaxShowcase = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative h-[350vh] z-20 pointer-events-none">
-      <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden">
-        {/* Vertical stack of transformation cases */}
-        <div className="flex flex-col items-center justify-center w-full h-full">
+    <section ref={sectionRef} className="relative h-[400vh] z-20 pointer-events-none">
+      <div className="sticky top-0 h-screen w-full overflow-hidden">
 
-          {/* CASE 1 (Top - Mountain guy) */}
-          <div className="relative w-full h-screen">
-            <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
-              <img
-                ref={originalRef3}
-                src={parallaxOriginal3}
-                alt="Original Style 1"
-                className="w-full h-full object-contain rounded-lg shadow-2xl brightness-[0.85] filter will-change-transform"
-              />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center z-20 transition-transform duration-100 ease-out will-change-transform">
-              <img
-                ref={resultRef3}
-                src={parallaxResult3}
-                alt="Transformed Style 1"
-                className="w-full h-full object-contain rounded-lg shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9)] opacity-0 will-change-transform"
-              />
-            </div>
+        {/* CASE 1 (Mountain guy) - visible during first half of scroll */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
+            <img
+              ref={originalRef3}
+              src={parallaxOriginal3}
+              alt="Original Style 1"
+              className="max-w-full max-h-full object-contain will-change-transform"
+              style={{ maxHeight: '95vh', maxWidth: '95vw' }}
+            />
           </div>
-
-          {/* CASE 2 (Bottom - Model) */}
-          <div className="relative w-full h-screen">
-            <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
-              <img
-                ref={originalRef4}
-                src={parallaxOriginal4}
-                alt="Original Style 2"
-                className="w-full h-full object-contain rounded-lg shadow-2xl brightness-[0.85] filter will-change-transform"
-              />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center z-20 transition-transform duration-100 ease-out will-change-transform">
-              <img
-                ref={resultRef4}
-                src={parallaxResult4}
-                alt="Transformed Style 2"
-                className="w-full h-full object-contain rounded-lg shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9)] opacity-0 will-change-transform"
-              />
-            </div>
+          <div className="absolute inset-0 flex items-center justify-center z-20 transition-transform duration-100 ease-out will-change-transform">
+            <img
+              ref={resultRef3}
+              src={parallaxResult3}
+              alt="Transformed Style 1"
+              className="max-w-full max-h-full object-contain opacity-0 will-change-transform"
+              style={{ maxHeight: '95vh', maxWidth: '95vw' }}
+            />
           </div>
-
         </div>
+
+        {/* CASE 2 (Model) - visible during second half of scroll */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
+            <img
+              ref={originalRef4}
+              src={parallaxOriginal4}
+              alt="Original Style 2"
+              className="max-w-full max-h-full object-contain will-change-transform"
+              style={{ maxHeight: '95vh', maxWidth: '95vw' }}
+            />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center z-20 transition-transform duration-100 ease-out will-change-transform">
+            <img
+              ref={resultRef4}
+              src={parallaxResult4}
+              alt="Transformed Style 2"
+              className="max-w-full max-h-full object-contain opacity-0 will-change-transform"
+              style={{ maxHeight: '95vh', maxWidth: '95vw' }}
+            />
+          </div>
+        </div>
+
       </div>
     </section>
   );
