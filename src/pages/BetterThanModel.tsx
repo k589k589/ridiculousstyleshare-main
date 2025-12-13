@@ -717,7 +717,7 @@ const VirtualTryOn = () => {
               <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-px bg-gradient-to-r from-transparent via-[hsl(45,60%,50%)] to-transparent"></div>
             </div>
             <p className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed font-light">
-              {t('tryOn.subtitle')}
+              {t('betterThanModel.subtitle')}
             </p>
             <div className="mt-8 flex items-center justify-center gap-2">
               <div className="h-px w-16 bg-gradient-to-r from-[hsl(45,60%,50%)] to-transparent"></div>

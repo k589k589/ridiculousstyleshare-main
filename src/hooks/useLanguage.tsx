@@ -282,7 +282,8 @@ const translations = {
     'tryOn.perfectResult': '完美呈現的虛擬試穿效果',
     'tryOn.tryOnCompleted': '✨ 專屬試穿完成',
     'tryOn.perfectDisplay': '✨ 完美呈現',
-    'tryOn.subtitle': '在社群媒體上看到喜歡的穿搭?馬上試',
+    'tryOn.subtitle': '以後連網購都能問，好看嗎？',
+    'betterThanModel.subtitle': '在社群媒體上看到喜歡的穿搭?馬上試',
 
     // Case study labels
     'case.originalPhoto': '原始照片',
@@ -756,6 +757,7 @@ const translations = {
     'tryOn.tryOnCompleted': '✨ Exclusive try-on completed',
     'tryOn.perfectDisplay': '✨ Perfect Display',
     'tryOn.subtitle': 'Now you can even ask when shopping online: Does it look good?',
+    'betterThanModel.subtitle': 'See an outfit you like on social media? Try it on now!',
 
     // Case study labels
     'case.originalPhoto': 'Original Photo',
