@@ -21,17 +21,17 @@ import clothingCase3Basketball from "@/assets/clothing-case3-basketball.png";
 import resultCase3Basketball from "@/assets/result-case3-basketball.jpg";
 import rssWatermark from "@/assets/rss-watermark.png";
 
-// BTM Showcase images
-import btmOriginal from "@/assets/btm-original.png";
-import btmTarget from "@/assets/btm-target.png";
-import btmResult from "@/assets/btm-result.png";
+// BTM Showcase images (v2)
+import btmOriginal from "@/assets/btm-original-v2.png";
+import btmTarget from "@/assets/btm-target-v2.png";
+import btmResult from "@/assets/btm-result-v2.png";
 
-// 3-Step Transformation Showcase Component
+// 3-Step Horizontal Gallery Showcase Component
 const TransformationShowcase = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const originalRef = useRef<HTMLImageElement>(null);
-  const targetRef = useRef<HTMLImageElement>(null);
-  const resultRef = useRef<HTMLImageElement>(null);
+  const originalRef = useRef<HTMLDivElement>(null);
+  const targetRef = useRef<HTMLDivElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,52 +43,51 @@ const TransformationShowcase = () => {
       const totalHeight = rect.height - viewportHeight;
       const overallProgress = Math.max(0, Math.min(1, distance / totalHeight));
 
-      // Phase 1: Original visible (0-30%), then fades out (30-40%)
-      // Phase 2: Target slides in (30-40%), visible (40-60%), fades out (60-70%)
-      // Phase 3: Result zooms in (60-70%), visible (70-100%)
+      // Continuous Horizontal Slide Logic:
+      // 0-40%: Original Slides Left, Target Slides In from Right
+      // 40-50%: Pause (Target Fully Visible)
+      // 50-90%: Target Slides Left, Result Slides In from Right
+      // 90-100%: Pause (Result Fully Visible)
 
-      // Original photo
+      // Helper to map range to value
+      const mapRange = (value: number, inMin: number, inMax: number, outMin: number, outMax: number) => {
+        if (value < inMin) return outMin;
+        if (value > inMax) return outMax;
+        return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+      };
+
+      // Original: 0 -> -100% (during 0.0 - 0.4)
+      const xOriginal = mapRange(overallProgress, 0, 0.4, 0, -120);
+
+      // Target: 100% -> 0% (during 0.0 - 0.4), then 0 -> -100% (during 0.5 - 0.9)
+      let xTarget = 120; // Default off-screen right
+      if (overallProgress <= 0.4) {
+        xTarget = mapRange(overallProgress, 0, 0.4, 120, 0);
+      } else if (overallProgress <= 0.5) {
+        xTarget = 0; // Pause
+      } else {
+        xTarget = mapRange(overallProgress, 0.5, 0.9, 0, -120);
+      }
+
+      // Result: 100% -> 0% (during 0.5 - 0.9)
+      const xResult = mapRange(overallProgress, 0.5, 0.9, 120, 0);
+
       if (originalRef.current) {
-        const originalOpacity = overallProgress < 0.3
-          ? 1
-          : overallProgress < 0.4
-            ? 1 - (overallProgress - 0.3) * 10
-            : 0;
-        const originalScale = 1 - overallProgress * 0.1;
-        originalRef.current.style.opacity = `${originalOpacity}`;
-        originalRef.current.style.transform = `scale(${originalScale}) translateX(${overallProgress < 0.35 ? 0 : -(overallProgress - 0.35) * 300}px)`;
+        originalRef.current.style.transform = `translateX(${xOriginal}%)`;
+        originalRef.current.style.opacity = `${mapRange(overallProgress, 0.3, 0.4, 1, 0)}`; // Fade out slightly at end
       }
 
-      // Target outfit (slides in from right)
       if (targetRef.current) {
-        const targetSlideIn = overallProgress < 0.25 ? 100 : overallProgress < 0.4 ? 100 - (overallProgress - 0.25) * 666 : 0;
-        const targetOpacity = overallProgress < 0.25
-          ? 0
-          : overallProgress < 0.4
-            ? (overallProgress - 0.25) * 6.67
-            : overallProgress < 0.6
-              ? 1
-              : overallProgress < 0.7
-                ? 1 - (overallProgress - 0.6) * 10
-                : 0;
-        targetRef.current.style.opacity = `${targetOpacity}`;
-        targetRef.current.style.transform = `translateX(${targetSlideIn}px)`;
+        targetRef.current.style.transform = `translateX(${xTarget}%)`;
+        // Fade in/out logic for cleaner styling
+        const fadeIn = mapRange(overallProgress, 0, 0.1, 0, 1);
+        const fadeOut = mapRange(overallProgress, 0.8, 0.9, 1, 0);
+        targetRef.current.style.opacity = `${Math.min(fadeIn, fadeOut)}`;
       }
 
-      // Result (zooms in from center)
       if (resultRef.current) {
-        const resultOpacity = overallProgress < 0.55
-          ? 0
-          : overallProgress < 0.7
-            ? (overallProgress - 0.55) * 6.67
-            : 1;
-        const resultScale = overallProgress < 0.55
-          ? 0.8
-          : overallProgress < 0.7
-            ? 0.8 + (overallProgress - 0.55) * 1.33
-            : 1;
-        resultRef.current.style.opacity = `${resultOpacity}`;
-        resultRef.current.style.transform = `scale(${resultScale})`;
+        resultRef.current.style.transform = `translateX(${xResult}%)`;
+        resultRef.current.style.opacity = `${mapRange(overallProgress, 0.5, 0.6, 0, 1)}`;
       }
     };
 
@@ -98,52 +97,69 @@ const TransformationShowcase = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative h-[400vh] z-20 pointer-events-none">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
+    <section ref={sectionRef} className="relative h-[300vh] z-20 pointer-events-none">
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center bg-black/20 backdrop-blur-sm">
 
-        {/* Step labels */}
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-30 text-center">
-          <p className="text-white/60 text-sm tracking-widest uppercase">Transformation Showcase</p>
+        {/* Step labels - Dynamic */}
+        <div className="absolute top-24 left-0 right-0 z-30 flex justify-center pointer-events-none">
+          <div className="bg-black/50 backdrop-blur-md px-6 py-2 rounded-full border border-white/10">
+            <p className="text-white/90 text-sm tracking-[0.2em] font-light uppercase">
+              Step by Step Transformation
+            </p>
+          </div>
         </div>
 
-        {/* Original Photo */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <img
-            ref={originalRef}
-            src={btmOriginal}
-            alt="Original"
-            className="max-w-full max-h-full object-contain will-change-transform"
-            style={{ maxHeight: '80vh', maxWidth: '90vw' }}
-          />
-        </div>
+        {/* Container for images to ensure they align perfectly */}
+        <div className="relative w-full h-[80vh] max-w-4xl mx-auto flex items-center justify-center">
 
-        {/* Target Outfit */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <img
-            ref={targetRef}
-            src={btmTarget}
-            alt="Target Outfit"
-            className="max-w-full max-h-full object-contain opacity-0 will-change-transform"
-            style={{ maxHeight: '80vh', maxWidth: '90vw' }}
-          />
-        </div>
+          {/* Original Photo */}
+          <div ref={originalRef} className="absolute inset-x-4 inset-y-0 flex items-center justify-center will-change-transform transition-transform duration-75 ease-out">
+            <div className="relative w-full h-full flex items-center justify-center">
+              <img
+                src={btmOriginal}
+                alt="Original"
+                className="max-w-full max-h-full object-contain drop-shadow-2xl"
+              />
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-1 rounded backdrop-blur-md">
+                <span className="text-white/80 text-xs tracking-widest uppercase">Original</span>
+              </div>
+            </div>
+          </div>
 
-        {/* Result */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <img
-            ref={resultRef}
-            src={btmResult}
-            alt="Result"
-            className="max-w-full max-h-full object-contain opacity-0 will-change-transform"
-            style={{ maxHeight: '80vh', maxWidth: '90vw' }}
-          />
+          {/* Target Outfit */}
+          <div ref={targetRef} className="absolute inset-x-4 inset-y-0 flex items-center justify-center will-change-transform transition-transform duration-75 ease-out">
+            <div className="relative w-full h-full flex items-center justify-center">
+              <img
+                src={btmTarget}
+                alt="Target Outfit"
+                className="max-w-full max-h-full object-contain drop-shadow-2xl"
+              />
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-1 rounded backdrop-blur-md">
+                <span className="text-white/80 text-xs tracking-widest uppercase">Target Style</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Result */}
+          <div ref={resultRef} className="absolute inset-x-4 inset-y-0 flex items-center justify-center will-change-transform transition-transform duration-75 ease-out">
+            <div className="relative w-full h-full flex items-center justify-center">
+              <img
+                src={btmResult}
+                alt="Result"
+                className="max-w-full max-h-full object-contain drop-shadow-2xl"
+              />
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-[#FFD700]/90 px-4 py-1 rounded backdrop-blur-md shadow-[0_0_15px_rgba(255,215,0,0.3)]">
+                <span className="text-black text-xs font-bold tracking-widest uppercase">RSS Result</span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </div>
     </section>
   );
 };
-
 
 const VirtualTryOn = () => {
   const [bodyPhoto, setBodyPhoto] = useState<File | null>(null);
@@ -846,7 +862,7 @@ const VirtualTryOn = () => {
             </div>
           </div>
 
-          {/* Transformation Showcase */}
+          {/* Horizontal Gallery Showcase */}
           <TransformationShowcase />
 
           <div className="grid grid-cols-1 gap-8 mb-20 max-w-none w-full">
