@@ -91,7 +91,7 @@ const translations = {
     // Virtual Try-On
     'virtualTryOn.title': '虛擬試穿體驗',
     'virtualTryOn.personalPhoto': '全身照',
-    'virtualTryOn.uploadPhoto': '上傳你的照片',
+    'virtualTryOn.uploadPhoto': '上傳清晰照片',
     'virtualTryOn.fashionItems': '精選時尚單品',
     'virtualTryOn.selectOutfit': '選擇你喜歡的穿搭',
     'virtualTryOn.result': '試穿結果',
