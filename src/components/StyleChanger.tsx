@@ -36,28 +36,33 @@ const ParallaxShowcase = () => {
       const viewportHeight = window.innerHeight;
 
       const distance = -rect.top;
-      const height = rect.height - viewportHeight;
-      let progress = distance / height;
+      const totalHeight = rect.height - viewportHeight;
 
-      progress = Math.max(0, Math.min(1, progress));
+      // Split scroll into two phases: 0-50% for case 1, 50-100% for case 2
+      const overallProgress = Math.max(0, Math.min(1, distance / totalHeight));
+
+      // Case 1 progress (0 to 1 during first half of scroll)
+      const progress1 = Math.max(0, Math.min(1, overallProgress * 2));
+      // Case 2 progress (0 to 1 during second half of scroll)
+      const progress2 = Math.max(0, Math.min(1, (overallProgress - 0.5) * 2));
 
       // Helper for animation
-      const animatePair = (orig: HTMLImageElement | null, res: HTMLImageElement | null) => {
+      const animatePair = (orig: HTMLImageElement | null, res: HTMLImageElement | null, progress: number) => {
         if (orig) {
-          orig.style.transform = `translateY(${progress * -50}px) scale(${1 - progress * 0.05})`;
-          orig.style.opacity = `${1 - Math.pow(progress, 3)}`;
+          orig.style.transform = `translateY(${progress * -30}px) scale(${1 - progress * 0.05})`;
+          orig.style.opacity = `${1 - Math.pow(progress, 2)}`;
         }
         if (res) {
-          const slideUp = 100 - (progress * 100);
+          const slideUp = 80 - (progress * 80);
           const scale = 0.9 + (progress * 0.1);
           res.style.transform = `translateY(${slideUp}px) scale(${scale})`;
           res.style.opacity = `${Math.pow(progress, 1.5)}`;
         }
       };
 
-      // Animate 2 pairs
-      animatePair(originalRef3.current, resultRef3.current);
-      animatePair(originalRef4.current, resultRef4.current);
+      // Animate each case with its own progress
+      animatePair(originalRef3.current, resultRef3.current, progress1);
+      animatePair(originalRef4.current, resultRef4.current, progress2);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -66,19 +71,19 @@ const ParallaxShowcase = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative h-[180vh] z-20 pointer-events-none">
-      <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden">
-        {/* Single row of 2 transformation cases */}
-        <div className="flex items-center justify-center gap-2 md:gap-4 w-full h-[70vh] p-2 md:p-4">
+    <section ref={sectionRef} className="relative h-[300vh] z-20 pointer-events-none">
+      <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden px-4">
+        {/* Vertical stack of transformation cases */}
+        <div className="flex flex-col items-center justify-center gap-4 w-full max-w-md h-full py-4">
 
-          {/* CASE 1 (Left - Mountain guy) */}
-          <div className="relative w-1/2 h-full">
+          {/* CASE 1 (Top - Mountain guy) */}
+          <div className="relative w-full h-[45vh] flex-shrink-0">
             <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
               <img
                 ref={originalRef3}
                 src={parallaxOriginal3}
                 alt="Original Style 1"
-                className="w-full h-full object-contain rounded-sm shadow-2xl brightness-[0.8] filter will-change-transform"
+                className="w-full h-full object-contain rounded-lg shadow-2xl brightness-[0.85] filter will-change-transform"
               />
             </div>
             <div className="absolute inset-0 flex items-center justify-center z-20 transition-transform duration-100 ease-out will-change-transform">
@@ -86,19 +91,19 @@ const ParallaxShowcase = () => {
                 ref={resultRef3}
                 src={parallaxResult3}
                 alt="Transformed Style 1"
-                className="w-full h-full object-contain rounded-sm shadow-[0_35px_60px_-15px_rgba(0,0,0,0.9)] opacity-0 will-change-transform"
+                className="w-full h-full object-contain rounded-lg shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9)] opacity-0 will-change-transform"
               />
             </div>
           </div>
 
-          {/* CASE 2 (Right - Model blazer to blouse) */}
-          <div className="relative w-1/2 h-full">
+          {/* CASE 2 (Bottom - Model) */}
+          <div className="relative w-full h-[45vh] flex-shrink-0">
             <div className="absolute inset-0 flex items-center justify-center z-10 transition-transform duration-100 ease-out will-change-transform">
               <img
                 ref={originalRef4}
                 src={parallaxOriginal4}
                 alt="Original Style 2"
-                className="w-full h-full object-contain rounded-sm shadow-2xl brightness-[0.8] filter will-change-transform"
+                className="w-full h-full object-contain rounded-lg shadow-2xl brightness-[0.85] filter will-change-transform"
               />
             </div>
             <div className="absolute inset-0 flex items-center justify-center z-20 transition-transform duration-100 ease-out will-change-transform">
@@ -106,7 +111,7 @@ const ParallaxShowcase = () => {
                 ref={resultRef4}
                 src={parallaxResult4}
                 alt="Transformed Style 2"
-                className="w-full h-full object-contain rounded-sm shadow-[0_35px_60px_-15px_rgba(0,0,0,0.9)] opacity-0 will-change-transform"
+                className="w-full h-full object-contain rounded-lg shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9)] opacity-0 will-change-transform"
               />
             </div>
           </div>
