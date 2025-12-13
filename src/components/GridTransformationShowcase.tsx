@@ -76,7 +76,7 @@ const GridTransformationShowcase = ({ originalImage, resultImages }: GridTransfo
                             <img
                                 src={originalImage}
                                 alt="Original"
-                                className="w-full h-full object-contain md:object-cover max-w-4xl mx-auto"
+                                className="w-full h-full object-contain max-w-4xl mx-auto"
                             />
 
                             {/* Floating Label for Original */}
@@ -101,7 +101,7 @@ const GridTransformationShowcase = ({ originalImage, resultImages }: GridTransfo
                                     <img
                                         src={img}
                                         alt={`Style Option ${index + 1}`}
-                                        className="w-full h-full object-cover transition-transform hover:scale-105 duration-700"
+                                        className="w-full h-full object-contain transition-transform hover:scale-105 duration-700"
                                     />
                                     {/* Optional corner badges per image if needed */}
                                     {/* <div className="absolute top-2 left-2 bg-black/30 backdrop-blur-sm px-2 py-1 rounded text-xs text-white/50">
@@ -112,8 +112,8 @@ const GridTransformationShowcase = ({ originalImage, resultImages }: GridTransfo
                         </div>
 
                         {/* Floating Label for Grid */}
-                        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[hsl(45,60%,50%)] to-[hsl(45,80%,60%)] px-8 py-3 rounded-full shadow-[0_10px_30px_-5px_hsl(45,60%,50%,0.5)] z-40 transform translate-y-0 transition-all duration-500">
-                            <span className="text-black font-playfair font-bold text-xl tracking-wider">New Styles</span>
+                        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-40">
+                            <span className="text-white/40 font-playfair text-sm tracking-widest">New Look</span>
                         </div>
                     </div>
 
