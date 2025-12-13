@@ -191,8 +191,7 @@ const TrendingPosts = () => {
       if (!hasSeenGuide && !loading && trendingOutfits.length > 0) {
         // Small delay to ensure render
         const timer = setTimeout(() => {
-          // Temporarily disabled to debug crash
-          // setShowTryGuide(true);
+          setShowTryGuide(true);
         }, 1000);
         return () => clearTimeout(timer);
       }
