@@ -363,7 +363,7 @@ const translations = {
     'styleChanger.selectGender': '選擇性別',
     'styleChanger.male': '男性',
     'styleChanger.female': '女性',
-    'styleChanger.missionTitle': '我們的使命是讓你變得更自信',
+    'styleChanger.missionTitle': 'More outfit More confidence',
     'styleChanger.missionText': '',
     'styleChanger.startJourney': '開始改造旅程',
     'styleChanger.transformShowcaseTitle': '改造過程展示',
@@ -373,7 +373,7 @@ const translations = {
 
     // Style Trying
     'styleTrying.title': '試新風格',
-    'styleTrying.subtitle': '上傳您的照片，選擇喜歡的風格和品牌',
+    'styleTrying.subtitle': '在這裡換上全新風格',
     'styleTrying.uploadBody': '換你試試',
     'styleTrying.uploadDesc': '',
     'styleTrying.selectGender': '選擇您的性別',

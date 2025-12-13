@@ -704,9 +704,7 @@ const StyleTrying = () => {
                 <h3 className="text-2xl font-playfair text-white mb-2 group-hover:text-[hsl(45,60%,50%)] transition-colors duration-300">
                   {t('styleTrying.uploadBody')}
                 </h3>
-                <p className="text-white/70 text-base font-light">
-                  {t('styleTrying.uploadDesc')}
-                </p>
+
               </div>
 
               <div className="space-y-6 relative z-10 px-6">
