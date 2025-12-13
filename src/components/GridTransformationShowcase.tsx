@@ -60,7 +60,7 @@ const GridTransformationShowcase = ({ originalImage, resultImages }: GridTransfo
 
     return (
         <section ref={sectionRef} className="relative h-[300vh] z-20">
-            <div className="sticky top-0 h-screen w-full overflow-hidden bg-black">
+            <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#050505]">
                 <div className="w-full h-full relative flex items-center justify-center">
 
                     {/* Layer 1: Original Image */}
