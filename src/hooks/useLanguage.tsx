@@ -352,7 +352,7 @@ const translations = {
 
     // Style Changer
     'styleChanger.title': '即刻改造自己',
-    'styleChanger.subtitle': 'Upload your selfie and get a new YOU!',
+    'styleChanger.subtitle': 'Get a new YOU!',
     'styleChanger.uploadPhoto': '換你來試試',
     'styleChanger.mission': '我們的任務是讓你知道你能多好看',
     'styleChanger.quickAction1': '即刻改造自己',
@@ -374,8 +374,8 @@ const translations = {
     // Style Trying
     'styleTrying.title': '試新風格',
     'styleTrying.subtitle': '上傳您的照片，選擇喜歡的風格和品牌',
-    'styleTrying.uploadBody': '上傳全身照，然後選今天想嘗試的風格',
-    'styleTrying.uploadDesc': 'Upload your full body photo and choose a style to try',
+    'styleTrying.uploadBody': '換你試試',
+    'styleTrying.uploadDesc': '',
     'styleTrying.selectGender': '選擇您的性別',
     'styleTrying.selectGenderPlaceholder': '選擇性別',
     'styleTrying.selectStyle': '選擇風格',
@@ -809,7 +809,7 @@ const translations = {
 
     // Style Changer
     'styleChanger.title': 'Unleash Your Style Inspiration',
-    'styleChanger.subtitle': 'Upload your selfie and get a new YOU!',
+    'styleChanger.subtitle': 'Get a new YOU!',
     'styleChanger.uploadPhoto': 'Upload a full-body photo, let me help you change your outfit style',
     'styleChanger.mission': 'Our mission is to let you know you look so good.',
     'styleChanger.quickAction1': 'Transform Yourself',
@@ -831,8 +831,8 @@ const translations = {
     // Style Trying
     'styleTrying.title': 'Try New Style',
     'styleTrying.subtitle': 'Upload your photo, choose your favorite style and brand',
-    'styleTrying.uploadBody': 'Upload your full body photo and choose a style to try today',
-    'styleTrying.uploadDesc': 'Upload your full body photo and choose a style to try',
+    'styleTrying.uploadBody': '換你試試',
+    'styleTrying.uploadDesc': '',
     'styleTrying.selectGender': 'Select Your Gender',
     'styleTrying.selectGenderPlaceholder': 'Select gender',
     'styleTrying.selectStyle': 'Select Style',
