@@ -31,7 +31,6 @@ const TransformationShowcase = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const col2Ref = useRef<HTMLDivElement>(null);
   const col3Ref = useRef<HTMLDivElement>(null);
-  const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,14 +43,9 @@ const TransformationShowcase = () => {
       const overallProgress = Math.max(0, Math.min(1, distance / totalHeight));
 
       // 3-Column Build Logic:
-      // Col 1 (Original): Always visible (Left)
-      // Col 2 (Target): Slides in 0.2 -> 0.45 (Middle)
-      // Col 3 (Result): Slides in 0.55 -> 0.8 (Right)
-
-      // Labels
-      if (overallProgress < 0.2) setActiveStep(0);
-      else if (overallProgress < 0.55) setActiveStep(1);
-      else setActiveStep(2);
+      // Col 1 (Original): Always visible
+      // Col 2 (Target): Slides in 0.2 -> 0.45
+      // Col 3 (Result): Slides in 0.55 -> 0.8
 
       // Col 2 Animation (Target)
       if (col2Ref.current) {
@@ -63,7 +57,8 @@ const TransformationShowcase = () => {
         const ease = 1 - Math.pow(1 - p, 4); // Quartic ease out
         const translateY = (1 - ease) * 100;
         col2Ref.current.style.transform = `translateY(${translateY}%)`;
-        col2Ref.current.style.opacity = `${p * 1 + 0.2}`; // Fade in slightly too
+        // Fade in slightly
+        col2Ref.current.style.opacity = `${p * 1 + 0.2}`;
       }
 
       // Col 3 Animation (Result)
@@ -89,71 +84,56 @@ const TransformationShowcase = () => {
     <section ref={sectionRef} className="relative h-[400vh] z-20">
       <div className="sticky top-0 h-screen w-full bg-[#050505] overflow-hidden">
 
-        {/* Progress Header */}
-        <div className="absolute top-8 left-0 right-0 z-40 flex justify-center pointer-events-none">
-          <div className="bg-black/40 backdrop-blur-xl px-8 py-3 rounded-full border border-white/5 flex items-center gap-6 shadow-2xl">
-            <span className={`text-xs tracking-[0.2em] font-medium transition-colors duration-500 uppercase ${activeStep >= 0 ? 'text-white' : 'text-white/20'}`}>Original</span>
-            <div className="w-8 h-px bg-white/10"></div>
-            <span className={`text-xs tracking-[0.2em] font-medium transition-colors duration-500 uppercase ${activeStep >= 1 ? 'text-white' : 'text-white/20'}`}>Target</span>
-            <div className="w-8 h-px bg-white/10"></div>
-            <span className={`text-xs tracking-[0.2em] font-bold transition-colors duration-500 uppercase ${activeStep >= 2 ? 'text-amber-500' : 'text-white/20'}`}>Result</span>
-          </div>
-        </div>
+        {/* Triptych Grid - Mobile: Relative (Stacked), Desktop: Grid (Side by Side) */}
+        <div className="w-full h-full relative md:grid md:grid-cols-3">
 
-        {/* Triptych Grid */}
-        <div className="w-full h-full grid grid-cols-1 md:grid-cols-3">
-
-          {/* Col 1: Original (Left) */}
-          <div className="relative w-full h-full border-r border-white/5 bg-[#050505] flex items-center justify-center overflow-hidden">
+          {/* Col 1: Original */}
+          {/* Mobile: Absolute Full Screen, Desktop: Relative Col */}
+          <div className="absolute md:relative inset-0 w-full h-full border-r border-white/5 bg-[#050505] flex items-center justify-center overflow-hidden z-0">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.03),transparent)]" />
             <img
               src={btmOriginal}
               alt="Original"
-              className="w-full h-full object-cover opacity-90 transition-transform duration-[2s] hover:scale-105"
+              className="w-full h-full object-contain md:object-cover opacity-90"
             />
-            <div className="absolute bottom-12 left-8 md:left-12">
-              <p className="text-white/40 text-sm tracking-widest mb-2 uppercase font-light">The Beginning</p>
-              <h3 className="text-3xl md:text-5xl text-white font-playfair font-medium">Original</h3>
+            <div className="absolute bottom-12 left-0 right-0 text-center pointer-events-none">
+              <h3 className="text-sm md:text-base text-gray-400 font-light tracking-widest uppercase">Original</h3>
             </div>
           </div>
 
-          {/* Col 2: Target (Middle) */}
+          {/* Col 2: Target */}
           <div
             ref={col2Ref}
-            className="relative w-full h-full border-r border-white/5 bg-[#080808] flex items-center justify-center overflow-hidden will-change-transform z-10 shadow-[-20px_0_40px_-10px_rgba(0,0,0,0.5)]"
+            className="absolute md:relative inset-0 w-full h-full border-r border-white/5 bg-[#080808] flex items-center justify-center overflow-hidden will-change-transform z-10 shadow-[-20px_0_40px_-10px_rgba(0,0,0,0.5)]"
             style={{ transform: 'translateY(100%)' }}
           >
             <img
               src={btmTarget}
               alt="Target Style"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain md:object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-12 left-8 md:left-12">
-              <p className="text-white/40 text-sm tracking-widest mb-2 uppercase font-light">The Inspiration</p>
-              <h3 className="text-3xl md:text-5xl text-white font-playfair font-medium">Target Vibe</h3>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+            <div className="absolute bottom-12 left-0 right-0 text-center pointer-events-none">
+              <h3 className="text-sm md:text-base text-gray-400 font-light tracking-widest uppercase">Target Vibe</h3>
             </div>
           </div>
 
-          {/* Col 3: Result (Right) */}
+          {/* Col 3: Result */}
           <div
             ref={col3Ref}
-            className="relative w-full h-full bg-[#050505] flex items-center justify-center overflow-hidden will-change-transform z-20 shadow-[-20px_0_40px_-10px_rgba(0,0,0,0.8)]"
+            className="absolute md:relative inset-0 w-full h-full bg-[#050505] flex items-center justify-center overflow-hidden will-change-transform z-20 shadow-[-20px_0_40px_-10px_rgba(0,0,0,0.8)]"
             style={{ transform: 'translateY(100%)' }}
           >
-            <div className="absolute inset-0 bg-amber-500/5 mix-blend-overlay" />
+            <div className="absolute inset-0 bg-amber-500/5 mix-blend-overlay pointer-events-none" />
             <img
               src={btmResult}
               alt="Result"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain md:object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
 
-            <div className="absolute bottom-12 left-8 md:left-12">
-              <div className="inline-block px-3 py-1 bg-amber-500 rounded-full mb-4">
-                <span className="text-black text-[10px] font-bold tracking-widest uppercase">Premium</span>
-              </div>
-              <h3 className="text-3xl md:text-5xl text-white font-playfair font-bold">New Look</h3>
+            <div className="absolute bottom-12 left-0 right-0 text-center pointer-events-none">
+              <h3 className="text-sm md:text-base text-gray-400 font-light tracking-widest uppercase">New Look</h3>
             </div>
           </div>
 
