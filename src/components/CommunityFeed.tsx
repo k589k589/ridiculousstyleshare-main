@@ -585,20 +585,29 @@ const CommunityFeed = () => {
   const [showTryGuide, setShowTryGuide] = useState(false);
 
   useEffect(() => {
-    const hasSeenGuide = localStorage.getItem('rss_community_try_guide_shown');
-    if (!hasSeenGuide && !loading && outfits.length > 0) {
-      // Small delay to ensure render
-      const timer = setTimeout(() => {
-        setShowTryGuide(true);
-      }, 1000);
-      return () => clearTimeout(timer);
+    try {
+      const hasSeenGuide = localStorage.getItem('rss_community_try_guide_shown');
+      if (!hasSeenGuide && !loading && outfits.length > 0) {
+        // Small delay to ensure render
+        const timer = setTimeout(() => {
+          // Temporarily disabled to debug crash
+          // setShowTryGuide(true);
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    } catch (e) {
+      console.error('LocalStorage error:', e);
     }
   }, [loading, outfits.length]);
 
   const handleTryClick = (outfit: Outfit) => {
     if (showTryGuide) {
       setShowTryGuide(false);
-      localStorage.setItem('rss_community_try_guide_shown', 'true');
+      try {
+        localStorage.setItem('rss_community_try_guide_shown', 'true');
+      } catch (e) {
+        console.error('LocalStorage error:', e);
+      }
     }
     setTryOnConfirmDialog({ open: true, outfit });
   };

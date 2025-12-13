@@ -173,25 +173,42 @@ const TrendingPosts = () => {
     setDetailOpen(true);
   };
 
+  const handleLikeChange = (outfitId: string, isLiked: boolean) => {
+    setTrendingOutfits(prev => prev.map(o =>
+      o.id === outfitId
+        ? { ...o, is_liked: isLiked, likes_count: isLiked ? o.likes_count + 1 : o.likes_count - 1 }
+        : o
+    ));
+  };
+
   // Guide state - shares the same localStorage key with CommunityFeed
   const [showTryGuide, setShowTryGuide] = useState(false);
 
   useEffect(() => {
-    const hasSeenGuide = localStorage.getItem('rss_community_try_guide_shown');
-    // Only show if data is loaded and there are items
-    if (!hasSeenGuide && !loading && trendingOutfits.length > 0) {
-      // Small delay to ensure render
-      const timer = setTimeout(() => {
-        setShowTryGuide(true);
-      }, 1000);
-      return () => clearTimeout(timer);
+    try {
+      const hasSeenGuide = localStorage.getItem('rss_community_try_guide_shown');
+      // Only show if data is loaded and there are items
+      if (!hasSeenGuide && !loading && trendingOutfits.length > 0) {
+        // Small delay to ensure render
+        const timer = setTimeout(() => {
+          // Temporarily disabled to debug crash
+          // setShowTryGuide(true);
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    } catch (e) {
+      console.error('LocalStorage error:', e);
     }
   }, [loading, trendingOutfits.length]);
 
   const handleTryClick = (outfit: TrendingOutfit) => {
     if (showTryGuide) {
       setShowTryGuide(false);
-      localStorage.setItem('rss_community_try_guide_shown', 'true');
+      try {
+        localStorage.setItem('rss_community_try_guide_shown', 'true');
+      } catch (e) {
+        console.error('LocalStorage error:', e);
+      }
     }
     setTryOnConfirmDialog({ open: true, outfit });
   };
