@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -144,6 +145,7 @@ const StyleChanger = () => {
   const [showInstructions, setShowInstructions] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -323,7 +325,7 @@ const StyleChanger = () => {
                   <div className="space-y-6">
                     {/* Upload Area */}
                     <div>
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex items-center justify-center gap-2 mb-3">
                         <Label className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-playfair font-bold text-white leading-tight">{t('styleChanger.uploadPhoto')}</Label>
                         <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
                           <DialogTrigger asChild>

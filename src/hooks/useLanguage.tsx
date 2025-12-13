@@ -810,7 +810,7 @@ const translations = {
     // Style Changer
     'styleChanger.title': 'Unleash Your Style Inspiration',
     'styleChanger.subtitle': 'Get a new YOU!',
-    'styleChanger.uploadPhoto': 'Upload a full-body photo, let me help you change your outfit style',
+    'styleChanger.uploadPhoto': 'Your Turn',
     'styleChanger.mission': 'Our mission is to let you know you look so good.',
     'styleChanger.quickAction1': 'Transform Yourself',
     'styleChanger.quickAction2': 'Virtual Try-On',
