@@ -324,7 +324,7 @@ const StyleChanger = () => {
                     {/* Upload Area */}
                     <div>
                       <div className="flex items-center gap-2 mb-3">
-                        <Label className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-white leading-tight">{t('styleChanger.uploadPhoto')}</Label>
+                        <Label className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-playfair font-bold text-white leading-tight">{t('styleChanger.uploadPhoto')}</Label>
                         <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
                           <DialogTrigger asChild>
                             <button type="button" className="inline-flex items-center">

@@ -720,11 +720,9 @@ const VirtualTryOn = () => {
               {t('tryOn.subtitle')}
             </p>
             <div className="mt-8 flex items-center justify-center gap-2">
-              <div className="w-2 h-2 bg-[hsl(45,60%,50%)] rounded-full animate-pulse"></div>
               <div className="h-px w-16 bg-gradient-to-r from-[hsl(45,60%,50%)] to-transparent"></div>
               <div className="text-[hsl(45,60%,50%)] text-sm font-medium tracking-widest">EXCLUSIVE</div>
               <div className="h-px w-16 bg-gradient-to-l from-[hsl(45,60%,50%)] to-transparent"></div>
-              <div className="w-2 h-2 bg-[hsl(45,60%,50%)] rounded-full animate-pulse"></div>
             </div>
           </div>
 
@@ -840,9 +838,6 @@ const VirtualTryOn = () => {
               {/* Animated gradient border */}
               <div className="absolute -inset-[1px] bg-gradient-to-r from-[hsl(30,50%,40%,0.3)] via-transparent to-[hsl(30,50%,40%,0.3)] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-              {/* Floating orbs */}
-              <div className="absolute top-6 right-6 w-3 h-3 bg-[hsl(30,50%,50%)] rounded-full animate-pulse opacity-60 z-10"></div>
-              <div className="absolute bottom-6 left-6 w-2 h-2 bg-amber-300 rounded-full animate-pulse opacity-40 delay-300 z-10"></div>
 
               {/* Subtle glass effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-[hsl(30,25%,25%,0.08)] to-[hsl(30,30%,35%,0.03)] rounded-lg backdrop-blur-sm"></div>
