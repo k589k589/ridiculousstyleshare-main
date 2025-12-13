@@ -26,12 +26,12 @@ import btmOriginal from "@/assets/btm-original-v2.png";
 import btmTarget from "@/assets/btm-target-v2.png";
 import btmResult from "@/assets/btm-result-v2.png";
 
-// 3-Step Horizontal Gallery Showcase Component
+// 3-Step "Curtain Reveal" Showcase Component
 const TransformationShowcase = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const originalRef = useRef<HTMLDivElement>(null);
   const targetRef = useRef<HTMLDivElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+  const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,51 +43,42 @@ const TransformationShowcase = () => {
       const totalHeight = rect.height - viewportHeight;
       const overallProgress = Math.max(0, Math.min(1, distance / totalHeight));
 
-      // Continuous Horizontal Slide Logic:
-      // 0-40%: Original Slides Left, Target Slides In from Right
-      // 40-50%: Pause (Target Fully Visible)
-      // 50-90%: Target Slides Left, Result Slides In from Right
-      // 90-100%: Pause (Result Fully Visible)
+      // Curtain Reveal Logic:
+      // 0-35%: Original is visible. Target is hidden below.
+      // 35-65%: Target slides UP over Original.
+      // 65-100%: Result slides UP over Target.
 
-      // Helper to map range to value
-      const mapRange = (value: number, inMin: number, inMax: number, outMin: number, outMax: number) => {
-        if (value < inMin) return outMin;
-        if (value > inMax) return outMax;
-        return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
-      };
+      // Labels
+      if (overallProgress < 0.35) setActiveStep(0);
+      else if (overallProgress < 0.65) setActiveStep(1);
+      else setActiveStep(2);
 
-      // Original: 0 -> -100% (during 0.0 - 0.4)
-      const xOriginal = mapRange(overallProgress, 0, 0.4, 0, -120);
-
-      // Target: 100% -> 0% (during 0.0 - 0.4), then 0 -> -100% (during 0.5 - 0.9)
-      let xTarget = 120; // Default off-screen right
-      if (overallProgress <= 0.4) {
-        xTarget = mapRange(overallProgress, 0, 0.4, 120, 0);
-      } else if (overallProgress <= 0.5) {
-        xTarget = 0; // Pause
-      } else {
-        xTarget = mapRange(overallProgress, 0.5, 0.9, 0, -120);
-      }
-
-      // Result: 100% -> 0% (during 0.5 - 0.9)
-      const xResult = mapRange(overallProgress, 0.5, 0.9, 120, 0);
-
-      if (originalRef.current) {
-        originalRef.current.style.transform = `translateX(${xOriginal}%)`;
-        originalRef.current.style.opacity = `${mapRange(overallProgress, 0.3, 0.4, 1, 0)}`; // Fade out slightly at end
-      }
-
+      // Target Animation (Slides up 0.35 -> 0.55)
       if (targetRef.current) {
-        targetRef.current.style.transform = `translateX(${xTarget}%)`;
-        // Fade in/out logic for cleaner styling
-        const fadeIn = mapRange(overallProgress, 0, 0.1, 0, 1);
-        const fadeOut = mapRange(overallProgress, 0.8, 0.9, 1, 0);
-        targetRef.current.style.opacity = `${Math.min(fadeIn, fadeOut)}`;
+        // Start sliding at 0.25, finish at 0.55
+        // Progress within phase
+        let p = 0;
+        if (overallProgress < 0.25) p = 0;
+        else if (overallProgress > 0.55) p = 1;
+        else p = (overallProgress - 0.25) / 0.3; // 0.3 duration
+
+        // Easing (smooth out)
+        const ease = 1 - Math.pow(1 - p, 3);
+        const translateY = (1 - ease) * 100;
+        targetRef.current.style.transform = `translateY(${translateY}%)`;
       }
 
+      // Result Animation (Slides up 0.55 -> 0.85)
       if (resultRef.current) {
-        resultRef.current.style.transform = `translateX(${xResult}%)`;
-        resultRef.current.style.opacity = `${mapRange(overallProgress, 0.5, 0.6, 0, 1)}`;
+        // Start sliding at 0.55, finish at 0.85
+        let p = 0;
+        if (overallProgress < 0.55) p = 0;
+        else if (overallProgress > 0.85) p = 1;
+        else p = (overallProgress - 0.55) / 0.3;
+
+        const ease = 1 - Math.pow(1 - p, 3);
+        const translateY = (1 - ease) * 100;
+        resultRef.current.style.transform = `translateY(${translateY}%)`;
       }
     };
 
@@ -97,65 +88,78 @@ const TransformationShowcase = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative h-[300vh] z-20 pointer-events-none">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center bg-black/20 backdrop-blur-sm">
+    <section ref={sectionRef} className="relative h-[350vh] z-20 pointer-events-none">
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center bg-black">
 
-        {/* Step labels - Dynamic */}
-        <div className="absolute top-24 left-0 right-0 z-30 flex justify-center pointer-events-none">
-          <div className="bg-black/50 backdrop-blur-md px-6 py-2 rounded-full border border-white/10">
-            <p className="text-white/90 text-sm tracking-[0.2em] font-light uppercase">
-              Step by Step Transformation
-            </p>
+        {/* Dynamic Header */}
+        <div className="absolute top-0 w-full z-40 p-8 text-center bg-gradient-to-b from-black/80 to-transparent">
+          <div className="inline-block px-4 py-2 rounded-full border border-white/10 bg-black/40 backdrop-blur-md transition-all duration-500">
+            <span className="text-white text-sm font-light tracking-[0.2em] uppercase">
+              {activeStep === 0 && "Step 1: The Original"}
+              {activeStep === 1 && "Step 2: Choose Style"}
+              {activeStep === 2 && "Step 3: The Result"}
+            </span>
           </div>
         </div>
 
-        {/* Container for images to ensure they align perfectly */}
-        <div className="relative w-full h-[80vh] max-w-4xl mx-auto flex items-center justify-center">
+        {/* Container for the stack */}
+        <div className="relative w-full h-full max-w-lg mx-auto md:max-w-2xl lg:max-w-4xl">
 
-          {/* Original Photo */}
-          <div ref={originalRef} className="absolute inset-x-4 inset-y-0 flex items-center justify-center will-change-transform transition-transform duration-75 ease-out">
-            <div className="relative w-full h-full flex items-center justify-center">
-              <img
-                src={btmOriginal}
-                alt="Original"
-                className="max-w-full max-h-full object-contain drop-shadow-2xl"
-              />
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-1 rounded backdrop-blur-md">
-                <span className="text-white/80 text-xs tracking-widest uppercase">Original</span>
-              </div>
+          {/* Layer 1: Bottom (Original) - Always there, z-10 */}
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-900">
+            <img
+              src={btmOriginal}
+              alt="Original"
+              className="w-full h-full object-cover md:object-contain opacity-90"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute bottom-20 left-8 z-10">
+              <h3 className="text-4xl md:text-6xl font-playfair text-white opacity-40 font-bold">Original</h3>
             </div>
           </div>
 
-          {/* Target Outfit */}
-          <div ref={targetRef} className="absolute inset-x-4 inset-y-0 flex items-center justify-center will-change-transform transition-transform duration-75 ease-out">
-            <div className="relative w-full h-full flex items-center justify-center">
-              <img
-                src={btmTarget}
-                alt="Target Outfit"
-                className="max-w-full max-h-full object-contain drop-shadow-2xl"
-              />
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-1 rounded backdrop-blur-md">
-                <span className="text-white/80 text-xs tracking-widest uppercase">Target Style</span>
-              </div>
+          {/* Layer 2: Middle (Target) - Slides up, z-20 */}
+          <div
+            ref={targetRef}
+            className="absolute inset-0 z-20 flex items-center justify-center bg-zinc-800 shadow-[0_-25px_50px_-12px_rgba(0,0,0,0.8)] will-change-transform"
+            style={{ transform: 'translateY(100%)' }}
+          >
+            <img
+              src={btmTarget}
+              alt="Target Style"
+              className="w-full h-full object-cover md:object-contain"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute bottom-20 left-8 z-10">
+              <h3 className="text-4xl md:text-6xl font-playfair text-white font-bold">Target</h3>
+              <p className="text-white/60 mt-2 font-light tracking-wide">Select your desired vibe</p>
             </div>
           </div>
 
-          {/* Result */}
-          <div ref={resultRef} className="absolute inset-x-4 inset-y-0 flex items-center justify-center will-change-transform transition-transform duration-75 ease-out">
-            <div className="relative w-full h-full flex items-center justify-center">
-              <img
-                src={btmResult}
-                alt="Result"
-                className="max-w-full max-h-full object-contain drop-shadow-2xl"
-              />
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-[#FFD700]/90 px-4 py-1 rounded backdrop-blur-md shadow-[0_0_15px_rgba(255,215,0,0.3)]">
-                <span className="text-black text-xs font-bold tracking-widest uppercase">RSS Result</span>
+          {/* Layer 3: Top (Result) - Slides up, z-30 */}
+          <div
+            ref={resultRef}
+            className="absolute inset-0 z-30 flex items-center justify-center bg-black shadow-[0_-25px_50px_-12px_rgba(0,0,0,1)] will-change-transform"
+            style={{ transform: 'translateY(100%)' }}
+          >
+            <img
+              src={btmResult}
+              alt="Result"
+              className="w-full h-full object-cover md:object-contain"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/10 to-transparent pointer-events-none mix-blend-overlay" />
+
+            <div className="absolute bottom-20 left-8 z-10">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="h-px w-12 bg-[#FFD700]" />
+                <span className="text-[#FFD700] tracking-widest uppercase text-sm font-bold">Transformation Complete</span>
               </div>
+              <h3 className="text-4xl md:text-6xl font-playfair text-white font-bold">New Look</h3>
             </div>
           </div>
 
         </div>
-
       </div>
     </section>
   );
