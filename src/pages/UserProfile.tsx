@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Textarea } from '@/components/ui/textarea';
 import StartConversationButton from '@/components/StartConversationButton';
 import {
   UserPlus,
@@ -19,7 +22,8 @@ import {
   Bookmark,
   Heart,
   MessageCircle,
-  ArrowLeft
+  ArrowLeft,
+  Ban
 } from 'lucide-react';
 
 interface UserProfile {
@@ -46,6 +50,7 @@ const UserProfile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [outfits, setOutfits] = useState<Outfit[]>([]);
@@ -53,6 +58,9 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState('posts');
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [blockReason, setBlockReason] = useState('');
 
   const isOwnProfile = user?.id === userId;
 
@@ -62,6 +70,7 @@ const UserProfile = () => {
       fetchOutfits();
       if (user && !isOwnProfile) {
         checkFollowStatus();
+        checkBlockStatus();
       }
       if (isOwnProfile) {
         fetchBookmarkedOutfits();
@@ -155,6 +164,69 @@ const UserProfile = () => {
       setIsFollowing(!!data);
     } catch (error: any) {
       console.error('Error checking follow status:', error);
+    }
+  };
+
+  const checkBlockStatus = async () => {
+    if (!user || !userId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_blocks')
+        .select('id')
+        .eq('blocker_id', user.id)
+        .eq('blocked_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      setIsBlocked(!!data);
+    } catch (error: any) {
+      console.error('Error checking block status:', error);
+    }
+  };
+
+  const handleBlockUser = async () => {
+    if (!user || !userId) return;
+
+    try {
+      if (isBlocked) {
+        // Unblock
+        const { error } = await supabase
+          .from('user_blocks')
+          .delete()
+          .eq('blocker_id', user.id)
+          .eq('blocked_id', userId);
+
+        if (error) throw error;
+
+        setIsBlocked(false);
+        toast({ title: t('toast.userUnblocked') });
+      } else {
+        // Block
+        const { error } = await supabase
+          .from('user_blocks')
+          .insert({
+            blocker_id: user.id,
+            blocked_id: userId,
+            reason: blockReason || null,
+          });
+
+        if (error) throw error;
+
+        setIsBlocked(true);
+        toast({ title: t('toast.userBlocked') });
+      }
+    } catch (error: any) {
+      console.error('Error toggling block:', error);
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setBlockDialogOpen(false);
+      setBlockReason('');
     }
   };
 
@@ -315,6 +387,15 @@ const UserProfile = () => {
                           {isFollowing ? '取消追蹤' : '追蹤'}
                         </Button>
                         <StartConversationButton otherUserId={userId!} variant="outline" size="sm" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => isBlocked ? handleBlockUser() : setBlockDialogOpen(true)}
+                          className={`rounded-md px-3 h-8 text-sm ${isBlocked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'}`}
+                        >
+                          <Ban className="h-4 w-4 mr-1" />
+                          {isBlocked ? t('userProfile.unblockUser') : t('userProfile.blockUser')}
+                        </Button>
                       </>
                     )}
                   </div>
@@ -373,6 +454,39 @@ const UserProfile = () => {
           )}
         </Tabs>
       </div>
+
+      {/* Block User Confirmation Dialog */}
+      <AlertDialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">
+              {t('userProfile.confirmBlock')}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>{t('userProfile.blockDescription')}</p>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t('userProfile.blockReason')}</label>
+                <Textarea
+                  value={blockReason}
+                  onChange={(e) => setBlockReason(e.target.value)}
+                  placeholder={t('userProfile.blockReasonPlaceholder')}
+                  className="resize-none"
+                  rows={3}
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBlockUser}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
+            >
+              {t('userProfile.blockUser')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

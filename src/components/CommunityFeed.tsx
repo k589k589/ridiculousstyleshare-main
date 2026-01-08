@@ -174,10 +174,29 @@ const CommunityFeed = () => {
     }
 
     try {
+      // Get blocked user IDs (if user is logged in)
+      let blockedUserIds: string[] = [];
+      if (user) {
+        const { data: blockedData } = await supabase
+          .from('user_blocks')
+          .select('blocked_id')
+          .eq('blocker_id', user.id);
+
+        blockedUserIds = blockedData?.map(b => b.blocked_id) || [];
+      }
+
       // Build query
       let query = supabase
         .from('outfits')
         .select('*', { count: 'exact' });
+
+      // Filter out blocked users' content
+      if (blockedUserIds.length > 0) {
+        // Use NOT IN filter - Supabase doesn't have .notIn(), so we use a workaround
+        for (const blockedId of blockedUserIds) {
+          query = query.neq('user_id', blockedId);
+        }
+      }
 
       // Apply search filter
       if (searchQuery.trim()) {

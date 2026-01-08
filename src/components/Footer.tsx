@@ -59,6 +59,13 @@ const Footer = () => {
             >
               {t('footer.privacyPolicy') || '隱私政策 / Privacy Policy'}
             </a>
+            <span className="text-muted-foreground">|</span>
+            <a
+              href="/terms"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors underline"
+            >
+              {t('footer.termsOfService') || '服務條款 / Terms of Service'}
+            </a>
           </div>
           <p className="text-muted-foreground text-sm">
             {t('footer.tagline')}

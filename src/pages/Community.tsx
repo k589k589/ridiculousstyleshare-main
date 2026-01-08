@@ -51,21 +51,7 @@ const Community = () => {
         </section>
       </div>
 
-      {/* Floating Action Button */}
-      <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>
-        <DialogTrigger asChild>
-          <button
-            onClick={handleShareClick}
-            className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-primary/30 hover:scale-110 transition-all duration-300 flex items-center justify-center group"
-            aria-label={t('community.shareOutfit')}
-          >
-            <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
-          </button>
-        </DialogTrigger>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
-          <ShareOutfit onSuccess={() => setIsShareOpen(false)} />
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 };

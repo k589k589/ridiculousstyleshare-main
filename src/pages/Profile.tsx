@@ -17,6 +17,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from '@/components/ui/label';
 import BookmarkedOutfits from '@/components/BookmarkedOutfits';
 import OutfitDetailDialog from '@/components/OutfitDetailDialog';
+import { useAppleIAP } from '@/hooks/useAppleIAP';
+import { Capacitor } from '@capacitor/core';
 
 interface UserProfile {
   id: string;
@@ -51,6 +53,7 @@ interface VipSubscription {
 const Profile = () => {
   const { user, loading, signOut } = useAuth();
   const { t } = useLanguage();
+  const { purchase, isAvailable: isIapAvailable, error: iapError } = useAppleIAP();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [outfits, setOutfits] = useState<UserOutfit[]>([]);
   const [editProfile, setEditProfile] = useState({
@@ -73,6 +76,8 @@ const Profile = () => {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedOutfit, setSelectedOutfit] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState('outfits');
+  const [deleteAccountDialogOpen, setDeleteAccountDialogOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const MAX_TRYONS = 10;
 
@@ -305,7 +310,22 @@ const Profile = () => {
     if (!user) return;
 
     setIsSubscribing(true);
+
     try {
+      // Platform check: Native iOS uses Apple IAP
+      if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+        const success = await purchase();
+        if (success) {
+          toast.success(t('toast.subscriptionSuccess'));
+          await loadProfileData();
+        } else if (iapError) {
+          toast.error(iapError);
+        }
+        setIsSubscribing(false);
+        return;
+      }
+
+      // Web fallback: PayPal Subscription
       const { data, error } = await supabase.functions.invoke('create-paypal-subscription', {
         headers: {
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
@@ -398,6 +418,67 @@ const Profile = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    setIsDeletingAccount(true);
+    try {
+      // 1. Delete user's outfits
+      await supabase
+        .from('outfits')
+        .delete()
+        .eq('user_id', user.id);
+
+      // 2. Delete user's profile
+      await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', user.id);
+
+      // 3. Delete user's VIP subscription (if any)
+      await supabase
+        .from('vip_subscriptions')
+        .delete()
+        .eq('user_id', user.id);
+
+      // 4. Delete user's try-on count
+      await supabase
+        .from('user_tryons')
+        .delete()
+        .eq('user_id', user.id);
+
+      // 5. Delete user's bookmarks
+      await supabase
+        .from('outfit_bookmarks')
+        .delete()
+        .eq('user_id', user.id);
+
+      // 6. Delete user's likes
+      await supabase
+        .from('outfit_likes')
+        .delete()
+        .eq('user_id', user.id);
+
+      // 7. Delete user's comments
+      await supabase
+        .from('outfit_comments')
+        .delete()
+        .eq('user_id', user.id);
+
+      toast.success(t('toast.accountDeleted'));
+
+      // Sign out the user
+      await signOut();
+
+      setDeleteAccountDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      toast.error(t('toast.accountDeleteError'));
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
   if (loading || isLoadingData) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-background">
@@ -421,7 +502,7 @@ const Profile = () => {
         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-secondary/5 rounded-full blur-[120px]" />
       </div>
 
-      <div className="container mx-auto px-4 py-12 max-w-5xl relative z-10">
+      <div className="container mx-auto px-4 pt-32 pb-12 max-w-5xl relative z-10">
         {/* Instagram-Style Profile Header */}
         <div className="border-b border-border pb-8 mb-8">
           <div className="max-w-4xl mx-auto">
@@ -762,6 +843,20 @@ const Profile = () => {
                 {t('profile.saveChanges')}
               </Button>
             </div>
+
+            {/* Delete Account Section */}
+            <div className="border-t border-destructive/20 mt-6 pt-4">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setIsEditing(false);
+                  setDeleteAccountDialogOpen(true);
+                }}
+                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
+              >
+                {t('profile.deleteAccount')}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -810,6 +905,37 @@ const Profile = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Delete Account Confirmation Dialog */}
+      <AlertDialog open={deleteAccountDialogOpen} onOpenChange={setDeleteAccountDialogOpen}>
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-playfair text-destructive">
+              {t('profile.confirmDeleteAccount')}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>{t('profile.deleteAccountWarning')}</p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>{t('profile.deleteAccountData1')}</li>
+                <li>{t('profile.deleteAccountData2')}</li>
+                <li>{t('profile.deleteAccountData3')}</li>
+                <li>{t('profile.deleteAccountData4')}</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">{t('profile.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={isDeletingAccount}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
+            >
+              {isDeletingAccount ? t('profile.processing') : t('profile.confirmDeleteAccount')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Outfit Detail Dialog */}
       <OutfitDetailDialog
         isOpen={detailDialogOpen}
