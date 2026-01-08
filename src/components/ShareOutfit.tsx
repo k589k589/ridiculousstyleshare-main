@@ -135,11 +135,18 @@ const ShareOutfit = ({ onSuccess }: ShareOutfitProps) => {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <h2 className="text-xl font-bold mb-2">{t('community.loginRequired')}</h2>
-          <p className="text-muted-foreground">{t('community.loginToComment')}</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold">{t('community.loginRequired')}</h2>
+          <p className="text-muted-foreground max-w-xs mx-auto">
+            {t('community.loginDesc') || "請先登入以分享穿搭"}
+          </p>
         </div>
+        <Link to="/auth">
+          <Button className="rounded-full px-8 py-6 text-lg">
+            {t('community.login')}
+          </Button>
+        </Link>
       </div>
     );
   }

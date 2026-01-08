@@ -1,17 +1,19 @@
+import { useState, useEffect } from "react";
 import { Home, Search, Plus, Bell, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const FloatingBottomNav = () => {
     const location = useLocation();
     const { user } = useAuth();
-    const [hasUnread, setHasUnread] = import('react').useState(false);
+    const [hasUnread, setHasUnread] = useState(false);
 
-    import('react').useEffect(() => {
+    useEffect(() => {
         if (!user) return;
 
         const checkUnread = async () => {
-            const { count } = await import('@/integrations/supabase/client').then(m => m.supabase)
+            const { count } = await supabase
                 .from('notifications')
                 .select('*', { count: 'exact', head: true })
                 .eq('user_id', user.id)
@@ -22,7 +24,7 @@ const FloatingBottomNav = () => {
 
         checkUnread();
 
-        // Optional: Poll every minute or set up subscription
+        // Poll every minute
         const interval = setInterval(checkUnread, 60000);
         return () => clearInterval(interval);
     }, [user]);
