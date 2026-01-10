@@ -174,8 +174,8 @@ const Header = () => {
         <div className="flex items-center space-x-2">
           {isCommunityPage ? (
             <Link to="/" className="block">
-              <span className="text-2xl font-playfair whitespace-nowrap tracking-wide text-black drop-shadow-sm">
-                Real Community
+              <span className="text-3xl font-black font-sans uppercase tracking-tighter text-black drop-shadow-md transform scale-y-110" style={{ fontFamily: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif' }}>
+                REAL COMMUNITY
               </span>
             </Link>
           ) : (

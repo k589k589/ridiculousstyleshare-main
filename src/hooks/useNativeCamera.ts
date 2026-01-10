@@ -17,7 +17,7 @@ export const useNativeCamera = () => {
         quality: 90,
         allowEditing: true,
         resultType: CameraResultType.DataUrl,
-        source: CameraSource.Camera
+        source: CameraSource.Prompt
       });
 
       return image.dataUrl || null;

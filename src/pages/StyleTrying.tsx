@@ -635,38 +635,15 @@ const StyleTrying = () => {
       <div className="relative z-10 py-20 px-4">
         <div className="max-w-7xl mx-auto px-0">
           {/* Premium Header */}
-          <div className="text-center mb-20">
-            <div className="inline-block relative mb-8">
-              <h1 className="font-playfair text-5xl md:text-7xl font-bold text-white mb-4 relative z-10">
-                {t('styleTrying.title')}
+          {/* Premium Header */}
+          <div className="text-center mb-8 mt-0">
+            <div className="inline-block relative">
+              <h1 className="font-playfair text-4xl md:text-6xl font-bold text-white relative z-10">
+                Try New Style Here
               </h1>
               <div className="absolute -inset-6 bg-gradient-to-r from-[hsl(45,60%,50%,0.1)] to-[hsl(45,80%,60%,0.1)] blur-2xl rounded-full"></div>
               <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-px bg-gradient-to-r from-transparent via-[hsl(45,60%,50%)] to-transparent"></div>
             </div>
-            <p className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed font-light">
-              {t('styleTrying.subtitle')}
-            </p>
-
-            {/* Try-on counter */}
-            {user && !isLoadingCount && (
-              <div className="mt-6 flex items-center justify-center gap-3">
-                <div className="px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                  <div className="flex items-center gap-3">
-                    <span className="text-white font-medium">
-                      {isAdmin ? (
-                        t('styleTrying.adminUnlimited')
-                      ) : (
-                        <>
-                          {t('styleTrying.remainingTryons')}: <span className="text-[hsl(45,60%,50%)] font-bold">{MAX_TRYONS - tryonsCount}</span> / {MAX_TRYONS}
-                        </>
-                      )}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-
           </div>
 
           {/* Grid Style Showcase */}

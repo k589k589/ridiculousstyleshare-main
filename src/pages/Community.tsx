@@ -37,7 +37,7 @@ const Community = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Spacer */}
-      <div className="h-8"></div>
+      <div className="h-16 md:h-20"></div>
 
       <div className="container mx-auto px-4 py-8" id="feed-content">
         {/* Trending Posts */}
