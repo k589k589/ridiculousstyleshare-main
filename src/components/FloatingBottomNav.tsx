@@ -30,8 +30,8 @@ const FloatingBottomNav = () => {
     }, [user]);
 
     // Hide on Home ('/') and Login/Auth pages
-    // Show only on: /community, /notifications, /profile, /create-post, /user/*
-    const showNav = ['/community', '/notifications', '/profile', '/create-post'].some(path => location.pathname === path) ||
+    // Show only on: /community, /notifications, /profile, /user/*
+    const showNav = ['/community', '/notifications', '/profile'].some(path => location.pathname === path) ||
         location.pathname.startsWith('/user/');
 
     if (!showNav) return null;

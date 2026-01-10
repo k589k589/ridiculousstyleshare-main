@@ -1,17 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Globe, User } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import rssLogo from "@/assets/rss-logo-transparent.png";
 import { supabase } from '@/lib/supabase';
+import { useToast } from "@/hooks/use-toast";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
   const { user, signOut } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Check for unread notifications
+  useEffect(() => {
+    if (!user || !isMenuOpen) return;
+
+    const checkUnread = async () => {
+      const { count } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+
+      setHasUnread(!!count && count > 0);
+    };
+
+    checkUnread();
+  }, [user, isMenuOpen]);
+
+  // Handle profile link click - show reminder if not logged in
+  const handleProfileClick = () => {
+    setIsMenuOpen(false);
+    if (!user) {
+      toast({
+        title: t('community.loginRequired'),
+        description: t('community.loginDesc') || "請先登入以查看個人頁面",
+      });
+      navigate('/auth');
+    } else {
+      navigate('/profile');
+    }
+  };
+
+  // Handle notifications link click - show reminder if not logged in
+  const handleNotificationsClick = () => {
+    setIsMenuOpen(false);
+    if (!user) {
+      toast({
+        title: t('community.loginRequired'),
+        description: t('community.loginDesc') || "請先登入以查看通知",
+      });
+      navigate('/auth');
+    } else {
+      navigate('/notifications');
+    }
+  };
 
   // Full screen menu overlay
   if (isMenuOpen) {
@@ -40,14 +89,28 @@ const Header = () => {
             品牌
           </Link>
 
-          <div className="w-12 h-[1px] bg-white/20 my-2"></div>
+          {/* Only show Profile and Notifications when logged in */}
+          {user && (
+            <>
+              <div className="w-12 h-[1px] bg-white/20 my-2"></div>
 
-          <Link to="/notifications" onClick={() => setIsMenuOpen(false)} className="text-lg font-light tracking-widest hover:text-gray-300 transition-colors">
-            通知中心
-          </Link>
-          <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="text-lg font-light tracking-widest hover:text-gray-300 transition-colors">
-            個人頁面
-          </Link>
+              <button
+                onClick={handleNotificationsClick}
+                className="text-lg font-light tracking-widest hover:text-gray-300 transition-colors relative"
+              >
+                通知中心
+                {hasUnread && (
+                  <span className="absolute -top-1 -right-3 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
+              </button>
+              <button
+                onClick={handleProfileClick}
+                className="text-lg font-light tracking-widest hover:text-gray-300 transition-colors"
+              >
+                個人頁面
+              </button>
+            </>
+          )}
 
           <div className="flex flex-col items-center space-y-6 pt-4 opacity-50">
             <div className="flex items-center gap-3">
@@ -88,10 +151,21 @@ const Header = () => {
   const isHomePage = location.pathname === '/';
   const isCommunityPage = location.pathname === '/community';
 
-  // Dynamic text color: White for Home & Community, Black for others
-  const textColorClass = (isHomePage || isCommunityPage) ? 'text-white hover:text-white/80' : 'text-black hover:text-black/80';
-  const menuIconColorClass = (isHomePage || isCommunityPage) ? 'text-white hover:bg-white/10' : 'text-black hover:bg-black/10';
-  const logoFilterClass = (isHomePage || isCommunityPage) ? 'brightness-0 invert' : '';
+  // Dynamic text color: 
+  // - Home page: White icons (for dark hero background)
+  // - Community page: Black icons
+  // - Other pages: Black icons
+  const textColorClass = isHomePage ? 'text-white hover:text-white/80' : 'text-black hover:text-black/80';
+  const menuIconColorClass = isHomePage ? 'text-white hover:bg-white/10' : 'text-black hover:bg-black/10';
+
+  // Logo: Show original orange on Home, no filter elsewhere
+  // Home page gets no filter to show original orange logo
+  const logoFilterClass = '';
+
+  // Hide header on create-post and style-transfer-input pages for immersive experience
+  if (location.pathname === '/create-post' || location.pathname === '/style-transfer-input') {
+    return null;
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 w-full pt-[env(safe-area-inset-top)] bg-gradient-to-b from-black/20 to-transparent pointer-events-none">
@@ -100,7 +174,7 @@ const Header = () => {
         <div className="flex items-center space-x-2">
           {isCommunityPage ? (
             <Link to="/" className="block">
-              <span className="text-2xl font-serif italic tracking-wide text-white drop-shadow-md">
+              <span className="text-2xl font-playfair whitespace-nowrap tracking-wide text-black drop-shadow-sm">
                 Real Community
               </span>
             </Link>

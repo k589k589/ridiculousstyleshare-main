@@ -10,7 +10,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Globe } from 'lucide-react';
+import { Globe, ArrowLeft } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Capacitor } from '@capacitor/core';
@@ -449,6 +449,12 @@ const Auth = () => {
 
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-between items-start">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 -ml-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-gray-800/50"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-white via-[#FF6B35] to-white bg-clip-text text-transparent flex-1">
               StyleShare
             </CardTitle>
@@ -456,7 +462,7 @@ const Auth = () => {
               variant="ghost"
               size="icon"
               onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}
-              className="ml-2 text-gray-400 hover:text-[#FF6B35] hover:bg-gray-800/50 transition-colors"
+              className="text-gray-400 hover:text-[#FF6B35] hover:bg-gray-800/50 transition-colors"
             >
               <Globe className="h-5 w-5" />
             </Button>
