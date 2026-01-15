@@ -130,7 +130,7 @@ const translations = {
     'virtualTryOn.processingFailed': '處理失敗',
 
     // Better Than Model
-    'betterThanModel.title': '試試模特穿搭',
+    'betterThanModel.title': '模特穿搭',
     'betterThanModel.modelOutfits': '模特穿搭照',
     'betterThanModel.selectModelOutfit': '選擇你鍾意的模特穿搭照',
     'betterThanModel.clickToUpload': '點擊上傳照片',

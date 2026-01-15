@@ -32,7 +32,15 @@ import { ShareDialog } from './ShareDialog';
 import OutfitDetailDialog from './OutfitDetailDialog';
 import SearchResults from './SearchResults';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 interface Outfit {
   id: string;
@@ -83,6 +91,11 @@ const CommunityFeed = () => {
     outfitId: '',
     outfitTitle: '',
     outfitImage: ''
+  });
+  const [blockConfirmDialog, setBlockConfirmDialog] = useState<{ isOpen: boolean; userId: string; userName: string }>({
+    isOpen: false,
+    userId: '',
+    userName: ''
   });
   const { user } = useAuth();
   const { isBanned } = useBanCheck();
@@ -600,6 +613,40 @@ const CommunityFeed = () => {
     }
   };
 
+  const handleBlockUser = async () => {
+    if (!user || !blockConfirmDialog.userId) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_blocks')
+        .insert({
+          blocker_id: user.id,
+          blocked_id: blockConfirmDialog.userId,
+          reason: 'Blocked via Feed',
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: t('toast.userBlocked') || 'User Blocked',
+        description: t('toast.blockSuccess') || 'Content from this user will typically be hidden.',
+      });
+
+      // Remove posts from this user immediately from the current list
+      setOutfits(prev => prev.filter(o => o.user_id !== blockConfirmDialog.userId));
+
+      setBlockConfirmDialog({ isOpen: false, userId: '', userName: '' });
+
+    } catch (error: any) {
+      console.error('Block error:', error);
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Guide state
   const [showTryGuide, setShowTryGuide] = useState(false);
 
@@ -940,29 +987,43 @@ const CommunityFeed = () => {
                         />
                       </Button>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-1 p-0 h-auto"
-                        onClick={() => handleOpenReport(outfit.id, outfit.title)}
-                        title={t('community.reportTooltip')}
-                      >
-                        <Flag className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-1 p-0 h-auto"
-                        onClick={() => setShareDialog({
-                          isOpen: true,
-                          outfitId: outfit.id,
-                          outfitTitle: outfit.title,
-                          outfitImage: outfit.image_url
-                        })}
-                        title={t('community.shareTooltip')}
-                      >
-                        <Share2 className="h-4 w-4" />
-                      </Button>
+
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setShareDialog({
+                            isOpen: true,
+                            outfitId: outfit.id,
+                            outfitTitle: outfit.title,
+                            outfitImage: outfit.image_url
+                          })}>
+                            <Share2 className="mr-2 h-4 w-4" />
+                            {t('community.share')}
+                          </DropdownMenuItem>
+
+                          <DropdownMenuSeparator />
+
+                          <DropdownMenuItem onClick={() => handleOpenReport(outfit.id, outfit.title)} className="text-destructive focus:text-destructive">
+                            <Flag className="mr-2 h-4 w-4" />
+                            {t('community.report')}
+                          </DropdownMenuItem>
+
+                          {user && user.id !== outfit.user_id && (
+                            <DropdownMenuItem
+                              onClick={() => setBlockConfirmDialog({ isOpen: true, userId: outfit.user_id, userName: outfit.profiles?.name || '' })}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <UserMinus className="mr-2 h-4 w-4" />
+                              {t('userProfile.blockUser') || 'Block User'}
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </CardContent>
@@ -1040,7 +1101,7 @@ const CommunityFeed = () => {
                   console.error('Error incrementing try count:', error);
                 }
 
-                navigate('/better-than-model', {
+                navigate('/better-than-model-input', {
                   state: {
                     preloadedClothingImage: tryOnConfirmDialog.outfit.image_url
                   }
@@ -1053,7 +1114,25 @@ const CommunityFeed = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+
+
+      <AlertDialog open={blockConfirmDialog.isOpen} onOpenChange={(open) => setBlockConfirmDialog(prev => ({ ...prev, isOpen: open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('userProfile.confirmBlock') || 'Block User?'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('userProfile.blockDescription') || 'Are you sure you want to block this user? Their content will no longer be visible to you.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBlockUser} className="bg-destructive text-destructive-foreground">
+              Block
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div >
   );
 };
 

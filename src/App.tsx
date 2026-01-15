@@ -27,6 +27,7 @@ import UploadOfficialOutfits from "./pages/UploadOfficialOutfits";
 import Notifications from "./pages/Notifications";
 import CreatePost from "./pages/CreatePost";
 import StyleTransferInput from "./pages/StyleTransferInput";
+import BetterThanModelInput from "./pages/BetterThanModelInput";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import FloatingBottomNav from "./components/FloatingBottomNav";
@@ -67,6 +68,7 @@ const App = () => {
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/create-post" element={<CreatePost />} />
                   <Route path="/style-transfer-input" element={<StyleTransferInput />} />
+                  <Route path="/better-than-model-input" element={<BetterThanModelInput />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/auth" element={<Auth />} />

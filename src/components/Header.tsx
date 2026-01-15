@@ -151,19 +151,29 @@ const Header = () => {
   const isHomePage = location.pathname === '/';
   const isCommunityPage = location.pathname === '/community';
 
+  // Pages that need white header text (Dark backgrounds)
+  const isDarkPage = isHomePage ||
+    location.pathname === '/style-trying' ||
+    location.pathname === '/better-than-model' ||
+    location.pathname === '/better-than-model-input' || // Assuming it needs header
+    location.pathname === '/style-transfer-input';
+
   // Dynamic text color: 
-  // - Home page: White icons (for dark hero background)
-  // - Community page: Black icons
-  // - Other pages: Black icons
-  const textColorClass = isHomePage ? 'text-white hover:text-white/80' : 'text-black hover:text-black/80';
-  const menuIconColorClass = isHomePage ? 'text-white hover:bg-white/10' : 'text-black hover:bg-black/10';
+  // - Dark pages: White icons
+  // - Others: Black icons
+  const textColorClass = isDarkPage ? 'text-white hover:text-white/80' : 'text-black hover:text-black/80';
+  const menuIconColorClass = isDarkPage ? 'text-white hover:bg-white/10' : 'text-black hover:bg-black/10';
 
   // Logo: Show original orange on Home, no filter elsewhere
-  // Home page gets no filter to show original orange logo
   const logoFilterClass = '';
 
-  // Hide header on create-post and style-transfer-input pages for immersive experience
-  if (location.pathname === '/create-post' || location.pathname === '/style-transfer-input') {
+  // Hide header on create-post for immersive experience
+  // (Removed style-transfer-input from hidden list just in case, or keep it if user screenshot imply it exists? 
+  // The user screenshot showed "Try New Style Here" title, which is in StyleTrying.tsx.
+  // StyleTrying.tsx DOES show header.
+  // So I don't need to change the hidden list for style-transfer-input if the user was talking about StyleTrying.tsx.
+  // But they might be talking about both. I'll stick to mostly color change).
+  if (location.pathname === '/create-post') {
     return null;
   }
 

@@ -636,7 +636,7 @@ const StyleTrying = () => {
         <div className="max-w-7xl mx-auto px-0">
           {/* Premium Header */}
           {/* Premium Header */}
-          <div className="text-center mb-8 mt-0">
+          <div className="text-center mb-8 mt-12 md:mt-20">
             <div className="inline-block relative">
               <h1 className="font-playfair text-4xl md:text-6xl font-bold text-white relative z-10">
                 Try New Style Here

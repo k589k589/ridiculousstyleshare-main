@@ -465,6 +465,18 @@ const Profile = () => {
         .delete()
         .eq('user_id', user.id);
 
+      // 8. Delete user's blocks
+      await supabase
+        .from('user_blocks')
+        .delete()
+        .eq('blocker_id', user.id);
+
+      // 9. Delete user's reports
+      await supabase
+        .from('outfit_reports')
+        .delete()
+        .eq('reporter_id', user.id);
+
       toast.success(t('toast.accountDeleted'));
 
       // Sign out the user
@@ -707,9 +719,19 @@ const Profile = () => {
                     {vipSubscription ? t('profile.manageSubscription') : t('profile.joinVip')}
                   </Button>
                   {!vipSubscription && (
-                    <p className="text-xs text-center md:text-right text-white/40 mt-3">
-                      {t('profile.vipPrice')} / month • Cancel anytime
-                    </p>
+                    <div className="flex flex-col items-center md:items-end mt-3">
+                      <p className="text-xs text-white/40 mb-2">
+                        {t('profile.vipPrice')} / month • Cancel anytime
+                      </p>
+                      <div className="flex gap-4 text-[10px] text-white/30">
+                        <a href="/terms" target="_blank" className="hover:text-white/60 transition-colors">
+                          {t('auth.terms') || 'Terms of Use'}
+                        </a>
+                        <a href="/privacy-policy" target="_blank" className="hover:text-white/60 transition-colors">
+                          {t('auth.privacy') || 'Privacy Policy'}
+                        </a>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

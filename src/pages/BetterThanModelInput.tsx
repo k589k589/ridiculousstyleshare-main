@@ -1,16 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useNativeCamera } from "@/hooks/useNativeCamera";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { Globe, Loader2, X, Download, Share2 } from "lucide-react";
+import { Globe, Loader2, X, Download, Shirt, User as UserIcon, Check, Plus } from "lucide-react";
 import neonDancer from "@/assets/neon-dancer.png";
 
-const StyleTransferInput = () => {
+const BetterThanModelInput = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { language, setLanguage } = useLanguage();
     const { takePicture } = useNativeCamera();
     const { user } = useAuth();
@@ -21,37 +22,12 @@ const StyleTransferInput = () => {
         window.scrollTo(0, 0);
     }, []);
 
-    // Style Definitions
-    const maleStyles = [
-        { id: 'Southern European', label: '南歐渡假風' },
-        { id: 'British Gentleman', label: '英倫紳士' },
-        { id: 'American Street', label: '美式街頭' },
-        { id: 'Quiet Luxury', label: '極簡靜奢' },
-        { id: 'City Boy', label: '日系 City Boy' },
-        { id: 'Vintage Workwear', label: '復古工裝' },
-        { id: 'Techwear', label: '賽博機能' },
-        { id: 'Korean Clean', label: '韓系質感' },
-        { id: 'Gorpcore', label: '戶外山系' },
-        { id: 'Business Casual', label: '雅痞商務' },
-    ];
-
-    const femaleStyles = [
-        { id: 'Southern European', label: '南歐渡假風' },
-        { id: 'French Chic', label: '法式慵懶' },
-        { id: 'American Vintage', label: '美式復古' },
-        { id: 'Y2K', label: '千禧辣妹' },
-        { id: 'Quiet Luxury', label: '極簡靜奢' },
-        { id: 'Korean Soft', label: '韓系溫柔' },
-        { id: 'Dopamine', label: '多巴胺穿搭' },
-        { id: 'Balletcore', label: '芭蕾風' },
-        { id: 'Grunge', label: '廢土風' },
-        { id: 'Librarian', label: '知識份子風' },
-    ];
-
-    const [selectedGender, setSelectedGender] = useState<string>("Male");
-    const [selectedStyle, setSelectedStyle] = useState<string>(maleStyles[0].label); // Default to first style
+    // State
     const [bodyPhoto, setBodyPhoto] = useState<File | null>(null);
     const [bodyPreview, setBodyPreview] = useState<string>("");
+
+    const [clothingPhoto, setClothingPhoto] = useState<File | null>(null);
+    const [clothingPreview, setClothingPreview] = useState<string>("");
 
     // Processing States
     const [isProcessing, setIsProcessing] = useState(false);
@@ -64,15 +40,28 @@ const StyleTransferInput = () => {
     const [isAdmin, setIsAdmin] = useState(false);
     const progressInterval = useRef<number>();
 
-    const WEBHOOK_URL = "https://ryann8n.zeabur.app/webhook/8b2fe55f-df90-4e33-9248-fc9d29541ae1";
+    const WEBHOOK_URL = 'https://ryann8n.zeabur.app/webhook/17474c15-1097-4bbd-ac43-0c844bca4c0e';
     const MAX_TRYONS = 10;
     const remainingTries = Math.max(0, MAX_TRYONS - tryonsCount);
 
-    // Update default style when gender changes
+    // Initial check for preloaded clothing (from Community or Showcase)
     useEffect(() => {
-        const styles = selectedGender === 'Male' ? maleStyles : femaleStyles;
-        setSelectedStyle(styles[0].label);
-    }, [selectedGender]);
+        const state = location.state as { preloadedClothingImage?: string } | null;
+        if (state?.preloadedClothingImage) {
+            fetch(state.preloadedClothingImage)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], `clothing-preloaded-${Date.now()}.jpg`, { type: 'image/jpeg' });
+                    setClothingPhoto(file);
+                    setClothingPreview(state.preloadedClothingImage!);
+                    toast({
+                        title: language === 'zh' ? '已載入穿搭' : 'Outfit Loaded',
+                        description: language === 'zh' ? '請選擇您的個人照片' : 'Please select your photo',
+                    });
+                })
+                .catch(err => console.error('Failed to load clothing:', err));
+        }
+    }, [location.state, language, toast]);
 
     // Fetch user stats
     useEffect(() => {
@@ -89,6 +78,15 @@ const StyleTransferInput = () => {
                     .maybeSingle();
 
                 if (!error && data) setTryonsCount(data.tryons_count);
+
+                // Also fetch Profile Avatar if no body photo
+                if (!bodyPhoto) {
+                    const { data: profile } = await supabase.from('profiles').select('avatar_url').eq('user_id', user.id).maybeSingle();
+                    if (profile?.avatar_url) {
+                        setBodyPreview(profile.avatar_url);
+                        fetch(profile.avatar_url).then(r => r.blob()).then(b => setBodyPhoto(new File([b], 'avatar.jpg', { type: 'image/jpeg' })));
+                    }
+                }
             } catch (error) {
                 console.error('Error fetching user data:', error);
             }
@@ -100,32 +98,32 @@ const StyleTransferInput = () => {
         navigate(-1);
     };
 
-    const handleSelectPhoto = async () => {
+    // Generic Image Picker
+    const handlePickImage = async (type: 'body' | 'clothing') => {
         try {
             const imageBase64 = await takePicture();
             if (imageBase64) {
-                // Determine MIME type (default to png if unknown, though usually jpeg/png)
                 const mimeType = imageBase64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)?.[1] || 'image/jpeg';
                 const res = await fetch(imageBase64);
                 const blob = await res.blob();
-                const file = new File([blob], `photo-${Date.now()}.${mimeType.split('/')[1]}`, { type: mimeType });
+                const file = new File([blob], `${type}-${Date.now()}.${mimeType.split('/')[1]}`, { type: mimeType });
 
-                setBodyPhoto(file);
-                setBodyPreview(imageBase64);
-                setResultImage(""); // Reset result when new photo is picked
+                if (type === 'body') {
+                    setBodyPhoto(file);
+                    setBodyPreview(imageBase64);
+                } else {
+                    setClothingPhoto(file);
+                    setClothingPreview(imageBase64);
+                    // Scroll down slightly if needed or minimal feedback
+                }
+                setResultImage("");
             }
         } catch (error) {
-            console.error("Error selecting photo:", error);
-            toast({
-                title: language === 'zh' ? "選擇照片失敗" : "Failed to select photo",
-                description: language === 'zh' ? "請再試一次" : "Please try again",
-                variant: "destructive"
-            });
+            console.error(`Error selecting ${type} photo:`, error);
         }
     };
 
-    // --- Helper Functions from StyleTrying.tsx ---
-
+    // --- Helper Functions ---
     const extractImageFromJson = (data: any): string | null => {
         if (!data) return null;
         const isUrl = (v: any) => typeof v === 'string' && /^(https?:)?\/\//i.test(v);
@@ -153,54 +151,48 @@ const StyleTransferInput = () => {
 
     const pollForResult = async (endpoint: string): Promise<string> => {
         const start = Date.now();
-        const maxWait = 120000; // 2 minutes
+        const maxWait = 180000; // 3 minutes for VTO
         while (Date.now() - start < maxWait) {
             try {
                 const res = await fetch(endpoint, { method: 'GET' });
                 if (!res.ok) {
-                    await new Promise(r => setTimeout(r, 2000));
+                    await new Promise(r => setTimeout(r, 3000));
                     continue;
                 }
                 const text = await res.text();
+                // Direct URL check
+                const trimmed = text.trim().replace(/^"|"$/g, '');
+                if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
                 try {
                     const json = JSON.parse(text);
                     const img = extractImageFromJson(json);
                     if (img) return img;
-                } catch {
-                    // Check if raw URL
-                    const trimmed = text.trim().replace(/^"|"$/g, '');
-                    if (/^https?:\/\//i.test(trimmed)) return trimmed;
-                }
+                } catch { }
             } catch (_) { }
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 3000));
         }
         throw new Error(language === 'zh' ? '生成超時' : 'Generation timed out');
     };
 
     const handleGenerate = async () => {
         if (!bodyPhoto) {
-            toast({
-                title: language === 'zh' ? "請先選擇照片" : "Please select a photo first",
-                variant: "destructive"
-            });
+            toast({ title: language === 'zh' ? "請選擇個人照片" : "Please select your photo", variant: "destructive" });
+            return;
+        }
+        if (!clothingPhoto) {
+            toast({ title: language === 'zh' ? "請選擇穿搭照片" : "Please select clothing photo", variant: "destructive" });
             return;
         }
 
         if (!user) {
-            toast({
-                title: language === 'zh' ? "請先登入" : "Please login first",
-                variant: "destructive"
-            });
+            toast({ title: language === 'zh' ? "請先登入" : "Please login first", variant: "destructive" });
             navigate('/auth');
             return;
         }
 
         if (!isAdmin && tryonsCount >= MAX_TRYONS) {
-            toast({
-                title: language === 'zh' ? "次數已用完" : "Out of credits",
-                description: language === 'zh' ? "請升級或等待重置" : "Please upgrade or wait for reset",
-                variant: "destructive"
-            });
+            toast({ title: language === 'zh' ? "次數已用完" : "Out of credits", variant: "destructive" });
             return;
         }
 
@@ -208,31 +200,26 @@ const StyleTransferInput = () => {
         setProgress(0);
         setResultImage("");
 
-        // Progress Messages
         const messages = [
-            "Analyzing your unique features...",
-            "Consulting 2026 fashion trends...",
-            "Matching fabrics and textures...",
-            "Rendering your new look...",
-            "Adding final touches..."
+            "Scanning body shape...",
+            "Analyzing clothing fabric...",
+            "Fitting the outfit...",
+            "Adjusting lighting & shadows...",
+            "Polishing final look..."
         ];
-
-        // Simulated progress
         let msgIndex = 0;
         setProgressMessage(messages[0]);
 
         progressInterval.current = window.setInterval(() => {
             setProgress(prev => {
-                if (prev >= 98) return prev;
-                const next = prev + 0.8;
+                const next = prev + (prev < 80 ? 1 : 0.2); // Slower at end
+                if (next >= 99) return 99;
 
-                // Update message every ~20%
                 const newIndex = Math.floor(next / 20);
                 if (newIndex !== msgIndex && newIndex < messages.length) {
                     msgIndex = newIndex;
                     setProgressMessage(messages[msgIndex]);
                 }
-
                 return next;
             });
         }, 100);
@@ -240,15 +227,9 @@ const StyleTransferInput = () => {
         try {
             const formData = new FormData();
             formData.append('body_image', bodyPhoto);
-            formData.append('gender', language === 'zh' && selectedGender === 'Male' ? '男性' : (language === 'zh' ? '女性' : selectedGender));
+            formData.append('clothing_image', clothingPhoto);
+            formData.append('action', 'virtual_tryon');
 
-            // Pass the selected style!
-            formData.append('style', selectedStyle);
-            formData.append('season', 'Random');
-            formData.append('brand', 'Random');
-            formData.append('user_id', user.id);
-
-            // Use CORS proxy if needed
             const getProxiedUrl = (url: string) => `https://cors.isomorphic-git.org/${url}`;
             let endpoint = WEBHOOK_URL;
             let response;
@@ -270,41 +251,36 @@ const StyleTransferInput = () => {
             if (/^https?:\/\//i.test(trimmed)) {
                 finalImageUrl = trimmed;
             } else {
-                // Parse JSON
                 try {
                     const data = JSON.parse(text);
                     const extracted = extractImageFromJson(data);
                     if (extracted) {
                         finalImageUrl = extracted;
                     } else if (data.message === 'Workflow was started' || data.status === 'started') {
-                        // Start polling
                         finalImageUrl = await pollForResult(endpoint);
                     } else {
                         throw new Error("No image in response");
                     }
                 } catch {
-                    // Last resort fallback or error
                     throw new Error("Invalid response format");
                 }
             }
 
             if (finalImageUrl) {
                 setResultImage(finalImageUrl);
-                // Increment credits
                 if (!isAdmin) {
                     const { data: newCount } = await supabase.rpc('increment_user_tryons', { p_user_id: user.id });
                     if (newCount !== null) setTryonsCount(newCount);
                 }
                 toast({
-                    title: language === 'zh' ? "生成成功！" : "Success!",
-                    description: language === 'zh' ? "您的新風格已完成" : "Your new style is ready"
+                    title: language === 'zh' ? "試穿成功！" : "Success!",
                 });
             }
 
         } catch (error) {
             console.error(error);
             toast({
-                title: language === 'zh' ? "生成失敗" : "Generation Failed",
+                title: language === 'zh' ? "試穿失敗" : "Try-on Failed",
                 description: language === 'zh' ? "請稍後再試" : "Please try again later",
                 variant: "destructive"
             });
@@ -323,20 +299,18 @@ const StyleTransferInput = () => {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `rss-style-${Date.now()}.png`;
+            a.download = `rss-vto-${Date.now()}.png`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
-            toast({
-                title: language === 'zh' ? "下載成功" : "Downloaded",
-            });
-        } catch (error) {
-            console.error('Download failed:', error);
-        }
+            toast({ title: language === 'zh' ? "下載成功" : "Downloaded" });
+        } catch (error) { console.error(error); }
     };
 
-    // Full screen loading overlay
+    // --- RENDER ---
+
+    // Full screen loading
     if (isProcessing) {
         return (
             <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center text-white">
@@ -353,37 +327,21 @@ const StyleTransferInput = () => {
         );
     }
 
-    // Full screen result overlay
+    // Full screen result
     if (resultImage) {
         return (
             <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
-                {/* Visual Background Blur */}
                 <div className="absolute inset-0 z-0 opacity-50 blur-3xl scale-125 pointer-events-none">
                     <img src={resultImage} className="w-full h-full object-cover" alt="" />
                 </div>
-
-                {/* Main Image - Full Screen Contain */}
                 <div className="relative z-10 w-full h-full flex items-center justify-center p-4">
-                    <img
-                        src={resultImage}
-                        alt="Style Transfer Result"
-                        className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
-                    />
+                    <img src={resultImage} alt="Result" className="max-w-full max-h-full object-contain shadow-2xl rounded-lg" />
                 </div>
-
-                {/* Overlaid UI Controls */}
                 <div className="absolute top-0 left-0 right-0 z-20 p-4 pt-[calc(env(safe-area-inset-top)+1rem)] flex justify-between">
-                    <button
-                        onClick={() => { setResultImage(""); setBodyPhoto(null); setBodyPreview(""); }}
-                        className="p-3 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60 transition-colors"
-                    >
+                    <button onClick={() => { setResultImage(""); }} className="p-3 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60 transition-colors">
                         <X className="w-6 h-6" />
                     </button>
-
-                    <button
-                        onClick={downloadImage}
-                        className="p-3 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60 transition-colors shadow-lg"
-                    >
+                    <button onClick={downloadImage} className="p-3 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60 transition-colors shadow-lg">
                         <Download className="w-6 h-6" />
                     </button>
                 </div>
@@ -391,110 +349,93 @@ const StyleTransferInput = () => {
         );
     }
 
-    // Standard Grid of Styles
-    const currentStyleOptions = selectedGender === 'Male' ? maleStyles : femaleStyles;
-
     return (
         <div className="h-screen bg-black text-white flex flex-col relative overflow-hidden">
-            {/* Nav Bar (Absolute) */}
+            {/* Nav Bar */}
             <div className="absolute top-0 left-0 right-0 z-50 px-4 pt-[calc(env(safe-area-inset-top)+1rem)] flex justify-between items-center pointer-events-none">
                 <div></div>
             </div>
 
-            {/* Main Content Area */}
+            {/* Main Content Area - Center Layout */}
             <div className="flex-1 flex flex-col items-center justify-center relative z-10 w-full -mt-20">
 
-                {/* Image Container */}
-                <div className="relative w-72 h-72 lg:w-96 lg:h-96 flex items-center justify-center">
-
-                    {/* Background Glow */}
+                {/* 1. Body Photo - Large Center Glow */}
+                <div className="relative w-[85vw] h-[55vh] max-w-lg max-h-[600px] flex items-center justify-center mb-6">
+                    {/* Glow */}
                     <div className="absolute inset-0 bg-gray-500/20 blur-3xl rounded-full animate-pulse"></div>
 
-                    {/* Content: Preview > Neon Placeholder */}
-                    <div className="relative z-20 w-full h-full flex items-center justify-center cursor-pointer" onClick={handleSelectPhoto}>
+                    {/* Image Area */}
+                    <div className="relative z-20 w-full h-full flex items-center justify-center cursor-pointer group" onClick={() => handlePickImage('body')}>
                         {bodyPreview ? (
                             <img
                                 src={bodyPreview}
-                                alt="Preview"
+                                alt="Body Preview"
                                 className="w-full h-full object-contain drop-shadow-2xl rounded-lg opacity-90"
                             />
                         ) : (
                             <img
                                 src={neonDancer}
-                                alt="Select Photo"
+                                alt="Select Body"
                                 className="w-[80%] h-[80%] object-contain drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] opacity-80"
                             />
+                        )}
+
+                        {/* Edit Overlay Hint */}
+                        {bodyPreview && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                                <span className="text-white font-light tracking-widest text-sm border border-white/50 px-3 py-1 rounded-full uppercase">
+                                    {language === 'zh' ? '更換照片' : 'CHANGE PHOTO'}
+                                </span>
+                            </div>
                         )}
                     </div>
                 </div>
 
-                {/* Select Photo Text */}
+                {/* Text: Select Photo */}
                 <button
-                    onClick={handleSelectPhoto}
-                    className="mt-8 text-xl font-light tracking-[0.2em] uppercase text-white hover:text-white/80 border-b border-white/30 pb-1 z-50"
+                    onClick={() => handlePickImage('body')}
+                    className="text-xl font-light tracking-[0.2em] uppercase text-white hover:text-white/80 border-b border-white/30 pb-1 z-50 mb-8"
                 >
-                    {bodyPreview ? (language === 'zh' ? '更換照片' : 'CHANGE PHOTO') : 'SELECT PHOTO'}
+                    {bodyPreview ? (language === 'zh' ? '更換照片' : 'CHANGE BODY') : (language === 'zh' ? '選擇照片' : 'SELECT BODY PHOTO')}
                 </button>
+
+                {/* 2. Clothing Photo - Styling Pill (Replacing Gender Selector Area) */}
+                <div className="flex justify-center w-full z-50">
+                    <div
+                        className="flex items-center gap-3 bg-white/10 rounded-full pl-4 pr-1 py-1 backdrop-blur-sm border border-white/10 hover:bg-white/15 transition-all cursor-pointer shadow-lg max-w-[90vw]"
+                        onClick={() => handlePickImage('clothing')}
+                    >
+                        <div className="flex flex-col">
+                            <span className="text-[10px] text-white/50 uppercase tracking-widest text-left">
+                                {language === 'zh' ? '穿搭' : 'OUTFIT'}
+                            </span>
+                            <span className="text-sm font-medium text-white tracking-wider truncate max-w-[150px]">
+                                {clothingPreview ? (language === 'zh' ? '已選擇' : 'Selected') : (language === 'zh' ? '選擇穿搭照片' : 'Select Outfit Photo')}
+                            </span>
+                        </div>
+
+                        {/* Preview Thumbnail or Plus Icon */}
+                        <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center overflow-hidden border border-white/20">
+                            {clothingPreview ? (
+                                <img src={clothingPreview} alt="Outfit" className="w-full h-full object-cover" />
+                            ) : (
+                                <Plus className="w-5 h-5 text-white/70" />
+                            )}
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            {/* Bottom Controls Area */}
+            {/* Bottom Controls */}
             <div className="w-full pb-[calc(env(safe-area-inset-bottom)+1rem)] px-4 z-20 flex flex-col space-y-4 bg-gradient-to-t from-black via-black/95 to-transparent pt-8">
 
-                {/* Gender Toggle - Centered */}
-                <div className="flex justify-center w-full">
-                    <div className="flex bg-white/10 rounded-full p-1 backdrop-blur-sm border border-white/10 w-fit">
-                        <button
-                            onClick={() => setSelectedGender("Male")}
-                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${selectedGender === "Male"
-                                ? "bg-white/20 text-white shadow-lg"
-                                : "text-white/50 hover:text-white/80"
-                                }`}
-                        >
-                            {language === 'zh' ? '男性' : 'Male'}
-                        </button>
-                        <button
-                            onClick={() => setSelectedGender("Female")}
-                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${selectedGender === "Female"
-                                ? "bg-white/20 text-white shadow-lg"
-                                : "text-white/50 hover:text-white/80"
-                                }`}
-                        >
-                            {language === 'zh' ? '女性' : 'Female'}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Style Selector - Horizontal Scroll - Only show if photo selected, or always show? Always show for better discovery */}
-                <div className="w-full overflow-x-auto pb-4 no-scrollbar">
-                    <div className="flex space-x-3 px-2 min-w-max">
-                        {currentStyleOptions.map((style) => (
-                            <button
-                                key={style.id}
-                                onClick={() => setSelectedStyle(style.label)}
-                                className={`px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-all duration-300 ${selectedStyle === style.label
-                                    ? "bg-white text-black border-white"
-                                    : "bg-black/40 text-white/60 border-white/20 hover:border-white/50"
-                                    }`}
-                            >
-                                {style.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Bottom Bar: Cancel | Language | Credits | Action Button */}
                 <div className="w-full flex items-center justify-between gap-2 px-2">
-                    <button
-                        onClick={handleBack}
-                        className="text-white/70 hover:text-white text-sm font-light"
-                    >
+                    <button onClick={handleBack} className="text-white/70 hover:text-white text-sm font-light">
                         {language === 'zh' ? '取消' : 'Cancel'}
                     </button>
 
-                    <button
-                        onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}
-                        className="flex items-center gap-1 text-white/70 hover:text-white"
-                    >
+                    <button onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')} className="flex items-center gap-1 text-white/70 hover:text-white">
                         <Globe className="h-4 w-4" />
                         <span className="text-sm">{language === 'zh' ? 'EN' : '中'}</span>
                     </button>
@@ -507,9 +448,9 @@ const StyleTransferInput = () => {
                         className="h-10 px-6 text-sm font-medium rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all text-white border-none"
                         style={{ backgroundColor: '#A0522D' }}
                         onClick={handleGenerate}
-                        disabled={isProcessing}
+                        disabled={isProcessing || !bodyPhoto || !clothingPhoto}
                     >
-                        {language === 'zh' ? '嘗試風格' : 'Try Style'}
+                        {language === 'zh' ? '開始試穿' : 'Start Try-on'}
                     </Button>
                 </div>
             </div>
@@ -517,4 +458,4 @@ const StyleTransferInput = () => {
     );
 };
 
-export default StyleTransferInput;
+export default BetterThanModelInput;
