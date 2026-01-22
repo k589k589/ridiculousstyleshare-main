@@ -40,8 +40,12 @@ const Community = () => {
       <div className="h-16 md:h-20"></div>
 
       <div className="container mx-auto px-4 py-8" id="feed-content">
+        {/* Premium Header */}
+        <div className="mb-10 text-center space-y-3">
+        </div>
+
         {/* Trending Posts */}
-        <section className="mb-12">
+        <section className="mb-16">
           <TrendingPosts />
         </section>
 

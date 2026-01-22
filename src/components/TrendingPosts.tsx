@@ -241,188 +241,83 @@ const TrendingPosts = () => {
   }
 
   return (
-    <Card className="mb-8 bg-gradient-to-br from-primary/5 to-orange-400/5 border-primary/20">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold">
-          {t('community.trendingWeek')}
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          {t('community.trendingWeekSubtitle')}
-        </p>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {trendingOutfits.map((outfit, index) => (
-            <div key={outfit.id} className="relative">
-              {/* Trending badge */}
-              <Badge
-                className="absolute top-2 right-2 z-10 bg-gradient-to-r from-primary to-orange-400 text-white border-0"
-                variant="default"
+    <div className="mb-8 relative">
+      {/* Section Header with Gradient Line */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+        <div className="flex flex-col items-center">
+          <Badge variant="outline" className="mb-2 border-primary/20 text-primary bg-primary/5 uppercase tracking-widest text-[10px]">
+            Weekly Top 3
+          </Badge>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            <h2 className="text-2xl font-playfair font-bold text-foreground">
+              {t('community.trendingWeek')}
+            </h2>
+          </div>
+        </div>
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {trendingOutfits.map((outfit, index) => (
+          <div key={outfit.id} className="group relative">
+            {/* Rank Badge - Abstract Shape */}
+            <div className="absolute -top-3 -left-3 z-20 w-12 h-12 flex items-center justify-center font-playfair font-bold text-xl text-white">
+              <div className={`absolute inset-0 transform rotate-12 rounded-xl shadow-lg ${index === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-600' :
+                  index === 1 ? 'bg-gradient-to-br from-gray-300 to-slate-500' :
+                    'bg-gradient-to-br from-amber-700 to-amber-900'
+                }`}></div>
+              <span className="relative z-10 text-shadow-sm">#{index + 1}</span>
+            </div>
+
+            <Card className="overflow-hidden border-0 bg-card/50 backdrop-blur-sm shadow-md hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1">
+              <div
+                className="relative cursor-pointer aspect-[3/4] overflow-hidden"
+                onClick={() => handleOpenDetail(outfit)}
               >
-                #{index + 1}
-              </Badge>
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-10" />
+                <img
+                  src={outfit.image_url}
+                  alt={outfit.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                  onError={(e) => {
+                    const img = e.currentTarget as HTMLImageElement;
+                    img.src = '/placeholder.svg';
+                  }}
+                />
 
-              <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div
-                  className="relative cursor-pointer group"
-                  onClick={() => handleOpenDetail(outfit)}
-                >
-                  <AspectRatio ratio={4 / 5}>
-                    <img
-                      src={outfit.image_url}
-                      alt={`${outfit.title} ${t('virtualTryOn.fashionItems')}`}
-                      className="w-full h-full object-contain bg-muted transition-transform group-hover:scale-105"
-                      loading="lazy"
-                      decoding="async"
-                      onError={(e) => {
-                        const img = e.currentTarget as HTMLImageElement;
-                        img.onerror = null;
-                        img.src = '/placeholder.svg';
-                      }}
-                    />
-                  </AspectRatio>
-                </div>
-
-                <CardContent className="p-3">
-                  {/* User Info */}
-                  <div
-                    className="flex items-center gap-2 mb-2 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/user/${outfit.user_id}`);
-                    }}
-                  >
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={outfit.profiles?.avatar_url || undefined} />
-                      <AvatarFallback>
-                        <User className="h-3 w-3" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-xs font-medium">
-                      {outfit.profiles?.name || t('community.anonymousUser')}
-                    </span>
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="font-semibold text-sm mb-2 line-clamp-2">
+                {/* Overlay Info (Visible on hover on desktop, always on mobile) */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-100 transition-opacity z-10">
+                  <h3 className="font-playfair font-bold text-white text-lg line-clamp-1 mb-1 shadow-black/50 drop-shadow-md">
                     {outfit.title}
                   </h3>
-
-                  {/* Tags */}
-                  {outfit.style_tags && outfit.style_tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {outfit.style_tags.slice(0, 2).map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs px-2 py-0">
-                          {tag}
-                        </Badge>
-                      ))}
-                      {outfit.style_tags.length > 2 && (
-                        <Badge variant="outline" className="text-xs px-2 py-0">
-                          +{outfit.style_tags.length - 2}
-                        </Badge>
-                      )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-white/90">
+                      <Avatar className="h-5 w-5 border border-white/20">
+                        <AvatarImage src={outfit.profiles?.avatar_url || undefined} />
+                        <AvatarFallback className="text-[10px]">
+                          {outfit.profiles?.name?.charAt(0) || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs font-medium text-white/90 truncate max-w-[80px]">
+                        {outfit.profiles?.name || t('community.anonymousUser')}
+                      </span>
                     </div>
-                  )}
-
-                  {/* Stats */}
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 gap-1 px-2"
-                        onClick={(e) => handleLike(outfit.id, e)}
-                      >
-                        <Heart className={`h-3 w-3 ${outfit.is_liked ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`} />
-                        <span className="text-xs">{outfit.likes_count}</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 gap-1 px-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenDetail(outfit);
-                        }}
-                      >
-                        <MessageCircle className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-xs">{outfit.comments_count || 0}</span>
-                      </Button>
-                      {(() => {
-                        const count = outfit.try_count || 0;
-                        let bgColor, textColor, borderColor;
-                        if (count === 0) {
-                          bgColor = 'from-blue-500/20 to-blue-400/10';
-                          textColor = 'text-blue-400';
-                          borderColor = 'border-blue-400/30';
-                        } else if (count < 5) {
-                          bgColor = 'from-cyan-500/20 to-cyan-400/10';
-                          textColor = 'text-cyan-400';
-                          borderColor = 'border-cyan-400/30';
-                        } else if (count < 10) {
-                          bgColor = 'from-green-500/20 to-green-400/10';
-                          textColor = 'text-green-400';
-                          borderColor = 'border-green-400/30';
-                        } else if (count < 20) {
-                          bgColor = 'from-yellow-500/20 to-yellow-400/10';
-                          textColor = 'text-yellow-400';
-                          borderColor = 'border-yellow-400/30';
-                        } else if (count < 50) {
-                          bgColor = 'from-orange-500/20 to-orange-400/10';
-                          textColor = 'text-orange-400';
-                          borderColor = 'border-orange-400/30';
-                        } else {
-                          bgColor = 'from-red-500/20 to-red-400/10';
-                          textColor = 'text-red-400';
-                          borderColor = 'border-red-400/30';
-                        }
-                        return (
-                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r ${bgColor} border ${borderColor}`}>
-                            <Shirt className={`h-3 w-3 ${textColor}`} />
-                            <span className={`text-xs font-medium ${textColor}`}>{count}</span>
-                          </div>
-                        );
-                      })()}
-
-                      <div className="relative">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className={`h-7 px-3 border-2 font-semibold text-xs transition-all duration-200 ${showTryGuide && index === 0
-                            ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_15px_rgba(255,107,53,0.5)] z-20 relative animate-bounce'
-                            : 'border-primary text-primary hover:bg-primary hover:text-primary-foreground'
-                            }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTryClick(outfit);
-                          }}
-                          title={t('community.tryTooltip')}
-                        >
-                          {t('community.try')}
-                        </Button>
-
-                        {/* Guide Tooltip */}
-                        {showTryGuide && index === 0 && (
-                          <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-foreground text-background text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-xl z-30 animate-in fade-in zoom-in duration-300">
-                            {t('community.tryGuide')}
-                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rotate-45"></div>
-                          </div>
-                        )}
+                    <div className="flex gap-3 text-white/90">
+                      <div className="flex items-center gap-1">
+                        <Heart className={`h-3.5 w-3.5 ${outfit.is_liked ? 'fill-red-500 text-red-500' : 'text-white'}`} />
+                        <span className="text-xs font-medium">{outfit.likes_count}</span>
                       </div>
                     </div>
-                    <span>
-                      {new Date(outfit.created_at).toLocaleDateString('zh-TW', {
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          ))}
-        </div>
-      </CardContent>
+                </div>
+              </div>
+            </Card>
+          </div>
+        ))}
+      </div>
 
       <OutfitDetailDialog
         isOpen={detailOpen}
@@ -444,13 +339,11 @@ const TrendingPosts = () => {
             <AlertDialogCancel>{t('community.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={async () => {
               if (tryOnConfirmDialog.outfit) {
-                // Increment try count
                 try {
                   await supabase.rpc('increment_outfit_tries', { outfit_id: tryOnConfirmDialog.outfit.id });
                 } catch (error) {
                   console.error('Error incrementing try count:', error);
                 }
-
                 navigate('/better-than-model', {
                   state: {
                     preloadedClothingImage: tryOnConfirmDialog.outfit.image_url
@@ -464,7 +357,7 @@ const TrendingPosts = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Card>
+    </div>
   );
 };
 

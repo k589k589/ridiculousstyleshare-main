@@ -40,6 +40,8 @@ const translations = {
     'auth.agreeToTerms': '我已閱讀並同意',
     'auth.termsLink': '服務條款',
     'auth.termsRequired': '請先同意服務條款',
+    'auth.terms': '服務條款 (EULA)',
+    'auth.privacy': '隱私政策',
 
     // User Blocking
     'userProfile.blockUser': '封鎖用戶',
@@ -543,6 +545,8 @@ const translations = {
     'auth.agreeToTerms': 'I have read and agree to the',
     'auth.termsLink': 'Terms of Service',
     'auth.termsRequired': 'Please agree to the Terms of Service',
+    'auth.terms': 'Terms of Use (EULA)',
+    'auth.privacy': 'Privacy Policy',
 
     // User Blocking
     'userProfile.blockUser': 'Block User',

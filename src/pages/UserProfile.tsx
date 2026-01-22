@@ -23,7 +23,8 @@ import {
   Heart,
   MessageCircle,
   ArrowLeft,
-  Ban
+  Ban,
+  Trash
 } from 'lucide-react';
 
 interface UserProfile {
@@ -61,8 +62,33 @@ const UserProfile = () => {
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [blockReason, setBlockReason] = useState('');
+  const [deleteAccountDialogOpen, setDeleteAccountDialogOpen] = useState(false);
 
   const isOwnProfile = user?.id === userId;
+
+  const handleDeleteAccount = async () => {
+    try {
+      const { error } = await supabase.functions.invoke('delete-user');
+
+      if (error) throw error;
+
+      await supabase.auth.signOut();
+      toast({
+        title: '帳號已刪除',
+        description: '您的帳號已被永久刪除',
+      });
+      navigate('/');
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      toast({
+        title: '刪除失敗',
+        description: error.message || '請稍後再試',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleteAccountDialogOpen(false);
+    }
+  };
 
   useEffect(() => {
     if (userId) {
@@ -368,14 +394,25 @@ const UserProfile = () => {
                   <h1 className="text-xl md:text-2xl font-normal">{profile.name}</h1>
                   <div className="flex flex-wrap items-center gap-2">
                     {isOwnProfile ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate('/profile')}
-                        className="rounded-md px-4 h-8 text-sm font-semibold"
-                      >
-                        編輯個人資料
-                      </Button>
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate('/profile')}
+                          className="rounded-md px-4 h-8 text-sm font-semibold"
+                        >
+                          編輯個人資料
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDeleteAccountDialogOpen(true)}
+                          className="rounded-md px-3 h-8 text-sm text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash className="h-4 w-4 mr-1" />
+                          刪除帳號
+                        </Button>
+                      </>
                     ) : (
                       <>
                         <Button
@@ -483,6 +520,29 @@ const UserProfile = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
             >
               {t('userProfile.blockUser')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Account Confirmation Dialog */}
+      <AlertDialog open={deleteAccountDialogOpen} onOpenChange={setDeleteAccountDialogOpen}>
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">
+              {t('userProfile.deleteAccountTitle') || '刪除帳號'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('userProfile.deleteAccountDescription') || '確定要刪除您的帳號嗎？此操作無法復原，您的所有資料將會被永久刪除。'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
+            >
+              {t('userProfile.confirmDelete') || '確認刪除'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

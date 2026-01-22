@@ -1,5 +1,6 @@
 // Profile page component
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
 import Auth from '@/components/Auth';
@@ -52,8 +53,9 @@ interface VipSubscription {
 
 const Profile = () => {
   const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
   const { t } = useLanguage();
-  const { purchase, isAvailable: isIapAvailable, error: iapError } = useAppleIAP();
+  const { purchase, isAvailable: isIapAvailable, product: iapProduct, error: iapError } = useAppleIAP();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [outfits, setOutfits] = useState<UserOutfit[]>([]);
   const [editProfile, setEditProfile] = useState({
@@ -314,12 +316,27 @@ const Profile = () => {
     try {
       // Platform check: Native iOS uses Apple IAP
       if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
-        const success = await purchase();
+        // DEBUG: Show IAP state
+        toast.info(`IAP Debug: isAvailable=${isIapAvailable}, product=${iapProduct ? iapProduct.id : 'null'}, canPurchase=${iapProduct?.canPurchase || 'N/A'}`);
+
+        if (!isIapAvailable) {
+          toast.error('IAP store not available. Check: 1) IAP capability in Xcode 2) Product in App Store Connect');
+          setIsSubscribing(false);
+          return;
+        }
+
+        if (!iapProduct) {
+          toast.error('Product "vip_monthly_subscription" not found. Check App Store Connect.');
+          setIsSubscribing(false);
+          return;
+        }
+
+        const { success, error } = await purchase();
         if (success) {
           toast.success(t('toast.subscriptionSuccess'));
           await loadProfileData();
-        } else if (iapError) {
-          toast.error(iapError);
+        } else if (error) {
+          toast.error(error);
         }
         setIsSubscribing(false);
         return;
@@ -423,73 +440,26 @@ const Profile = () => {
 
     setIsDeletingAccount(true);
     try {
-      // 1. Delete user's outfits
-      await supabase
-        .from('outfits')
-        .delete()
-        .eq('user_id', user.id);
+      // Use the Edge Function for comprehensive deletion (Auth + Storage + DB)
+      const { error } = await supabase.functions.invoke('delete-user');
 
-      // 2. Delete user's profile
-      await supabase
-        .from('profiles')
-        .delete()
-        .eq('user_id', user.id);
+      if (error) throw error;
 
-      // 3. Delete user's VIP subscription (if any)
-      await supabase
-        .from('vip_subscriptions')
-        .delete()
-        .eq('user_id', user.id);
-
-      // 4. Delete user's try-on count
-      await supabase
-        .from('user_tryons')
-        .delete()
-        .eq('user_id', user.id);
-
-      // 5. Delete user's bookmarks
-      await supabase
-        .from('outfit_bookmarks')
-        .delete()
-        .eq('user_id', user.id);
-
-      // 6. Delete user's likes
-      await supabase
-        .from('outfit_likes')
-        .delete()
-        .eq('user_id', user.id);
-
-      // 7. Delete user's comments
-      await supabase
-        .from('outfit_comments')
-        .delete()
-        .eq('user_id', user.id);
-
-      // 8. Delete user's blocks
-      await supabase
-        .from('user_blocks')
-        .delete()
-        .eq('blocker_id', user.id);
-
-      // 9. Delete user's reports
-      await supabase
-        .from('outfit_reports')
-        .delete()
-        .eq('reporter_id', user.id);
+      await supabase.auth.signOut();
 
       toast.success(t('toast.accountDeleted'));
+      navigate('/');
 
-      // Sign out the user
-      await signOut();
-
-      setDeleteAccountDialogOpen(false);
     } catch (error: any) {
       console.error('Error deleting account:', error);
-      toast.error(t('toast.accountDeleteError'));
+      // Show more specific error if possible
+      toast.error(error.message || t('toast.accountDeleteError'));
     } finally {
       setIsDeletingAccount(false);
+      setDeleteAccountDialogOpen(false);
     }
   };
+
 
   if (loading || isLoadingData) {
     return (
@@ -547,8 +517,8 @@ const Profile = () => {
               {/* User Info - Instagram Style (Right Side) */}
               <div className="flex-1 min-w-0">
                 {/* Username and Actions */}
-                <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-5">
-                  <h1 className="text-xl md:text-2xl font-normal">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-8">
+                  <h1 className="text-3xl md:text-4xl font-playfair font-bold tracking-tight">
                     {profile?.name || '用戶'}
                   </h1>
                   <div className="flex flex-wrap items-center gap-2">
@@ -556,31 +526,32 @@ const Profile = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => setIsEditing(true)}
-                      className="rounded-md px-4 h-8 text-sm font-semibold"
+                      className="rounded-full px-6 h-9 text-xs font-semibold tracking-wide uppercase border-muted-foreground/30 hover:border-black transition-colors"
                     >
                       {t('profile.editProfile')}
                     </Button>
                     {vipSubscription && (
-                      <Badge className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white border-none px-2">
-                        <span className="mr-1">👑</span> VIP
+                      <Badge className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 text-black border-none px-3 py-1 shadow-sm">
+                        <span className="mr-1.5 font-bold">VIP</span> 👑
                       </Badge>
                     )}
                   </div>
                 </div>
 
                 {/* Stats - Instagram Style (Horizontal) */}
-                <div className="flex gap-6 md:gap-10 mb-4">
-                  <div className="flex items-baseline gap-1">
-                    <span className="font-semibold">{outfits.length}</span>
-                    <span className="text-sm text-muted-foreground">{t('profile.outfits')}</span>
+                {/* Stats - Premium Style */}
+                <div className="flex gap-8 md:gap-12 mb-6">
+                  <div className="flex flex-col">
+                    <span className="font-playfair text-2xl font-bold">{outfits.length}</span>
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{t('profile.outfits')}</span>
                   </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="font-semibold">{profile?.followers_count || 0}</span>
-                    <span className="text-sm text-muted-foreground">{t('profile.followers')}</span>
+                  <div className="flex flex-col">
+                    <span className="font-playfair text-2xl font-bold">{profile?.followers_count || 0}</span>
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{t('profile.followers')}</span>
                   </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="font-semibold">{profile?.trending_count || 0}</span>
-                    <span className="text-sm text-muted-foreground">{t('profile.trending')}</span>
+                  <div className="flex flex-col">
+                    <span className="font-playfair text-2xl font-bold">{profile?.trending_count || 0}</span>
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{t('profile.trending')}</span>
                   </div>
                 </div>
 
@@ -622,121 +593,123 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* VIP Subscription Card - Premium Membership Style */}
-        <div className="mb-16">
-          <div className="relative group perspective-1000">
-            <div className={`relative overflow-hidden rounded-3xl transition-all duration-500 transform hover:scale-[1.02] hover:shadow-2xl ${vipSubscription
-              ? 'bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white shadow-xl shadow-black/40 border border-white/10'
-              : 'bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white shadow-xl shadow-black/20 border border-white/5'
-              }`}>
+        {/* VIP Subscription Card - Luxury Dark Theme */}
+        <div className="mb-12">
+          {vipSubscription && vipSubscription.status === 'active' ? (
+            // Active VIP State
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-700/50 shadow-xl p-6 md:p-8 text-white">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px] -mr-16 -mt-16 pointer-events-none" />
 
-              {/* Card Texture/Noise */}
-              <div className="absolute inset-0 opacity-20 mix-blend-overlay pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
-
-              {/* Decorative Elements */}
-              <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-
-              <div className="relative z-10 p-8 md:p-10 flex flex-col md:flex-row items-stretch justify-between gap-8 min-h-[240px]">
-
-                {/* Left Side: Card Info */}
-                <div className="flex flex-col justify-between flex-1">
-                  <div>
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${vipSubscription
-                        ? 'bg-gradient-to-br from-yellow-300 to-yellow-600 text-black'
-                        : 'bg-white/10 backdrop-blur-md border border-white/10'
-                        }`}>
-                        <span className="text-xl font-black">V</span>
-                      </div>
-                      <span className="text-sm font-medium tracking-[0.2em] text-white/60 uppercase">
-                        Ridiculous Style Share
-                      </span>
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-amber-500/20 rounded-lg">
+                      <span className="text-xl">👑</span>
                     </div>
-
-                    <h3 className="text-4xl md:text-5xl font-playfair font-bold mb-2 text-white tracking-tight">
-                      {vipSubscription ? t('profile.goldMember') : t('profile.standardAccess')}
-                    </h3>
-                    <div className="flex flex-col gap-1">
-                      <p className="text-gray-400 text-lg font-light tracking-wide">
-                        {vipSubscription ? t('profile.vipBenefits') : t('profile.standardBenefits')}
-                      </p>
-                      {!vipSubscription && (
-                        <div className="flex items-baseline gap-3 mt-1">
-                          <span className="text-3xl font-bold text-yellow-500">$5<span className="text-sm font-normal text-yellow-500/80">/mo</span></span>
-                          <span className="text-lg text-gray-500 line-through decoration-gray-500/50">$20</span>
-                          <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider border border-red-500/20">
-                            Limited Offer
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                    <span className="text-amber-500 font-medium tracking-widest text-xs uppercase">VIP Member</span>
                   </div>
-
-                  <div className="mt-8 flex items-end gap-8">
-                    {vipSubscription && (
-                      <div>
-                        <div className="text-xs text-white/40 uppercase tracking-wider mb-1">{t('profile.validUntil')}</div>
-                        <div className="text-xl font-mono text-white/90">
-                          {vipSubscription.next_billing_date
-                            ? new Date(vipSubscription.next_billing_date).toLocaleDateString(t('auth.login') === '登入' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                            : t('profile.lifetime')}
-                        </div>
-                      </div>
-                    )}
-                    {!vipSubscription && (
-                      <div className="flex gap-3">
-                        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10">
-                          <span className="text-yellow-500">∞</span> <span className="text-xs text-gray-300">{t('profile.tryOns')}</span>
-                        </div>
-                        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10">
-                          <span className="text-yellow-500">★</span> <span className="text-xs text-gray-300">{t('profile.vipBadge')}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <h3 className="text-2xl md:text-3xl font-playfair font-bold mb-2">
+                    {t('profile.goldMember')}
+                  </h3>
+                  <p className="text-slate-300 text-sm max-w-md">
+                    {t('profile.vipUnlimited')} • {t('profile.vipBadge')}
+                  </p>
                 </div>
 
-                {/* Right Side: Action */}
-                <div className="flex flex-col justify-end items-end border-t md:border-t-0 md:border-l border-white/10 pt-6 md:pt-0 md:pl-8">
-                  <div className="text-right mb-auto hidden md:block">
-                    <div className="text-xs text-white/40 uppercase tracking-wider mb-1">{t('profile.status')}</div>
-                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase ${vipSubscription ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/20' : 'bg-white/10 text-gray-400'
-                      }`}>
-                      <span className={`w-2 h-2 rounded-full ${vipSubscription ? 'bg-yellow-500 animate-pulse' : 'bg-gray-500'}`} />
-                      {vipSubscription ? t('profile.active') : t('profile.inactive')}
-                    </div>
-                  </div>
-
+                <div className="flex gap-3">
                   <Button
-                    size="lg"
-                    onClick={vipSubscription ? () => setCancelDialogOpen(true) : handleSubscribe}
-                    className={`w-full md:w-auto rounded-xl px-8 h-12 text-base font-bold tracking-wide transition-all duration-300 shadow-lg hover:scale-105 ${vipSubscription
-                      ? 'bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20'
-                      : 'bg-white text-black hover:bg-gray-100 border-none'
-                      }`}
+                    variant="outline"
+                    onClick={() => setCancelDialogOpen(true)}
+                    className="border-white/20 text-white hover:bg-white/10 hover:text-white backdrop-blur-sm transition-all rounded-full px-6"
                   >
-                    {vipSubscription ? t('profile.manageSubscription') : t('profile.joinVip')}
+                    {isCancelling ? t('profile.processing') : t('profile.manageSubscription')}
                   </Button>
-                  {!vipSubscription && (
-                    <div className="flex flex-col items-center md:items-end mt-3">
-                      <p className="text-xs text-white/40 mb-2">
-                        {t('profile.vipPrice')} / month • Cancel anytime
-                      </p>
-                      <div className="flex gap-4 text-[10px] text-white/30">
-                        <a href="/terms" target="_blank" className="hover:text-white/60 transition-colors">
-                          {t('auth.terms') || 'Terms of Use'}
-                        </a>
-                        <a href="/privacy-policy" target="_blank" className="hover:text-white/60 transition-colors">
-                          {t('auth.privacy') || 'Privacy Policy'}
-                        </a>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            // Inactive VIP State (Upgrade Prompt)
+            <div className="relative overflow-hidden group rounded-3xl bg-[#0F172A] text-white shadow-2xl transition-all duration-500 hover:shadow-amber-500/5">
+              {/* Background Gradients */}
+              <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-br from-amber-600/20 to-transparent rounded-full blur-[100px] opacity-60 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none" />
+
+              <div className="relative z-10 p-8 md:p-10 flex flex-col md:flex-row gap-8 md:items-center justify-between">
+                <div className="space-y-6 max-w-xl">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10">
+                        <span className="font-playfair font-bold text-lg">V</span>
+                      </div>
+                      <span className="text-white/60 tracking-[0.2em] text-xs font-medium">RIDICULOUS STYLE SHARE</span>
+                    </div>
+                    <h3 className="text-4xl md:text-5xl font-playfair font-bold text-white tracking-tight leading-tight">
+                      {t('profile.vipPlan')}
+                    </h3>
+                    <p className="text-lg text-white/60 font-light">
+                      {t('profile.standardBenefits')}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <Badge variant="secondary" className="bg-white/10 hover:bg-white/15 text-white border-none px-4 py-1.5 h-auto text-sm backdrop-blur-sm">
+                      ∞ {t('profile.tryOns')}
+                    </Badge>
+                    <Badge variant="secondary" className="bg-white/10 hover:bg-white/15 text-white border-none px-4 py-1.5 h-auto text-sm backdrop-blur-sm">
+                      ★ {t('profile.vipBadge')}
+                    </Badge>
+                  </div>
+
+                  <div className="pt-2">
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-3xl font-bold text-amber-400">$5</span>
+                      <span className="text-sm text-white/60">/mo</span>
+                      <span className="text-lg text-white/40 line-through decoration-white/30 ml-2">$20</span>
+                      <Badge className="ml-3 bg-amber-500/20 text-amber-300 border-amber-500/30 hover:bg-amber-500/30">LIMITED OFFER</Badge>
+                    </div>
+                    <p className="text-xs text-white/40">
+                      Cancel anytime
+                    </p>
+                  </div>
+                </div>
+
+                <div className="shrink-0 w-full md:w-auto flex flex-col gap-4">
+                  <Button
+                    size="lg"
+                    className="w-full md:w-64 h-14 rounded-xl text-lg font-semibold bg-white text-black hover:bg-gray-100 shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    onClick={handleSubscribe}
+                    disabled={isSubscribing}
+                  >
+                    {isSubscribing ? t('profile.processing') : (
+                      <>
+                        {t('profile.joinVip')}
+                        <span className="ml-2">→</span>
+                      </>
+                    )}
+                  </Button>
+
+                  {/* Legal Links - With updated translations */}
+                  <div className="flex items-center justify-center gap-4 text-[10px] text-white/30">
+                    <a
+                      href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:text-white/60 transition-colors underline decoration-white/10 underline-offset-2"
+                    >
+                      {t('auth.terms') || 'Terms of Use (EULA)'}
+                    </a>
+                    <span className="w-px h-3 bg-white/10"></span>
+                    <Link
+                      to="/privacy-policy"
+                      className="hover:text-white/60 transition-colors underline decoration-white/10 underline-offset-2"
+                    >
+                      {t('auth.privacy') || 'Privacy Policy'}
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Content Tabs */}

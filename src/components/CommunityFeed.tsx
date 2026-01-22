@@ -808,226 +808,260 @@ const CommunityFeed = () => {
             </p>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {outfits.map((outfit, index) => (
-              <Card key={outfit.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative">
-                  <AspectRatio ratio={4 / 5}>
+              <div key={outfit.id} className="group">
+                <Card className="overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col bg-card/80 backdrop-blur-sm rounded-xl">
+                  <div
+                    className="relative cursor-pointer overflow-hidden aspect-[4/5]"
+                    onClick={() => handleOpenImageViewer(outfit)}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-300 pointer-events-none" />
+
                     <img
                       src={outfit.image_url}
                       alt={`${outfit.title} 穿搭靈感`}
-                      className="w-full h-full object-contain bg-muted cursor-pointer hover:opacity-90 transition-opacity"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       loading="lazy"
                       decoding="async"
-                      onClick={() => handleOpenImageViewer(outfit)}
                       onError={(e) => {
                         const img = e.currentTarget as HTMLImageElement;
                         img.onerror = null;
                         img.src = '/placeholder.svg';
                       }}
                     />
-                  </AspectRatio>
-                </div>
 
-                <CardContent className="p-4">
-                  {/* User Info */}
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <div
-                      className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => navigate(`/user/${outfit.user_id}`)}
-                    >
-                      <Avatar className="h-8 w-8 flex-shrink-0">
-                        <AvatarImage src={outfit.profiles?.avatar_url || undefined} />
-                        <AvatarFallback>
-                          <User className="h-4 w-4" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium truncate">
-                        {outfit.profiles?.name || t('community.anonymousUser')}
-                      </span>
+                    {/* Quick Actions Overlay */}
+                    <div className="absolute top-2 right-2 flex flex-col gap-2 translate-x-10 group-hover:translate-x-0 transition-transform duration-300 z-20">
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        className="h-8 w-8 rounded-full bg-white/90 shadow-md hover:bg-white text-black"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBookmark(outfit.id, !!outfit.is_bookmarked);
+                        }}
+                      >
+                        <Bookmark className={`h-4 w-4 ${outfit.is_bookmarked ? 'fill-yellow-500 text-yellow-500' : 'text-gray-600'}`} />
+                      </Button>
                     </div>
 
-                    {/* Follow Button - Always visible for other users' posts */}
-                    {user && user.id !== outfit.user_id && (
+                    {/* Try Button Overlay */}
+                    <div className="absolute bottom-4 left-4 right-4 translate-y-10 group-hover:translate-y-0 transition-transform duration-300 z-20 opacity-0 group-hover:opacity-100">
                       <Button
-                        variant={outfit.is_following ? "secondary" : "default"}
                         size="sm"
-                        className="h-8 px-4 text-xs flex-shrink-0 font-semibold min-w-[70px]"
-                        onClick={() => handleFollow(outfit.user_id, outfit.is_following || false)}
+                        className="w-full bg-white/90 text-black hover:bg-white font-medium shadow-lg backdrop-blur-md"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTryClick(outfit);
+                        }}
                       >
-                        {outfit.is_following ? '✓ 已追蹤' : '+ 追蹤'}
+                        <Shirt className="h-4 w-4 mr-2" />
+                        {t('community.try')}
                       </Button>
-                    )}
+                    </div>
                   </div>
 
-                  {/* Title and Description */}
-                  <h3 className="font-semibold mb-2 line-clamp-2">
-                    {outfit.title}
-                  </h3>
-                  {outfit.description && (
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                      {outfit.description}
-                    </p>
-                  )}
-
-                  {/* Tags */}
-                  {outfit.style_tags && outfit.style_tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {outfit.style_tags.slice(0, 3).map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                      {outfit.style_tags.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{outfit.style_tags.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-1 p-0 h-auto"
-                        onClick={() => handleLike(outfit.id, outfit.is_liked || false)}
+                  <CardContent className="p-4">
+                    {/* User Info */}
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <div
+                        className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => navigate(`/user/${outfit.user_id}`)}
                       >
-                        <Heart
-                          className={`h-4 w-4 ${outfit.is_liked ? 'fill-red-500 text-red-500' : ''
-                            }`}
-                        />
-                        <span className="text-sm">{outfit.likes_count}</span>
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-1 p-0 h-auto"
-                        onClick={() => handleOpenComments(outfit)}
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                        <span className="text-sm">{outfit.comments_count || 0}</span>
-                      </Button>
-
-                      {(() => {
-                        const count = outfit.try_count || 0;
-                        // Heatmap colors
-                        let bgColor, textColor, borderColor;
-                        if (count === 0) {
-                          bgColor = 'from-blue-500/20 to-blue-400/10';
-                          textColor = 'text-blue-400';
-                          borderColor = 'border-blue-400/30';
-                        } else if (count < 5) {
-                          bgColor = 'from-cyan-500/20 to-cyan-400/10';
-                          textColor = 'text-cyan-400';
-                          borderColor = 'border-cyan-400/30';
-                        } else if (count < 10) {
-                          bgColor = 'from-green-500/20 to-green-400/10';
-                          textColor = 'text-green-400';
-                          borderColor = 'border-green-400/30';
-                        } else if (count < 20) {
-                          bgColor = 'from-yellow-500/20 to-yellow-400/10';
-                          textColor = 'text-yellow-400';
-                          borderColor = 'border-yellow-400/30';
-                        } else if (count < 50) {
-                          bgColor = 'from-orange-500/20 to-orange-400/10';
-                          textColor = 'text-orange-400';
-                          borderColor = 'border-orange-400/30';
-                        } else {
-                          bgColor = 'from-red-500/20 to-red-400/10';
-                          textColor = 'text-red-400';
-                          borderColor = 'border-red-400/30';
-                        }
-                        return (
-                          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full bg-gradient-to-r ${bgColor} border ${borderColor} transition-all duration-300`}>
-                            <Shirt className={`h-4 w-4 ${textColor}`} />
-                            <span className={`text-sm font-medium ${textColor}`}>{count}</span>
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <div className="relative">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className={`flex items-center gap-1 px-4 py-1 border-2 font-semibold transition-all duration-200 ${showTryGuide && index === 0
-                            ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_15px_rgba(255,107,53,0.5)] z-20 relative animate-bounce'
-                            : 'border-primary text-primary hover:bg-primary hover:text-primary-foreground'
-                            }`}
-                          onClick={() => handleTryClick(outfit)}
-                          title={t('community.tryTooltip')}
-                        >
-                          {t('community.try')}
-                        </Button>
-
-                        {/* Guide Tooltip */}
-                        {showTryGuide && index === 0 && (
-                          <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-foreground text-background text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-xl z-30 animate-in fade-in zoom-in duration-300">
-                            {t('community.tryGuide')}
-                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rotate-45"></div>
-                          </div>
-                        )}
+                        <Avatar className="h-8 w-8 flex-shrink-0">
+                          <AvatarImage src={outfit.profiles?.avatar_url || undefined} />
+                          <AvatarFallback>
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium truncate">
+                          {outfit.profiles?.name || t('community.anonymousUser')}
+                        </span>
                       </div>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-1 p-0 h-auto"
-                        onClick={() => handleBookmark(outfit.id, outfit.is_bookmarked || false)}
-                        title={outfit.is_bookmarked ? t('community.unbookmarkTooltip') : t('community.bookmarkTooltip')}
-                      >
-                        <Bookmark
-                          className={`h-4 w-4 ${outfit.is_bookmarked ? 'fill-primary text-primary' : ''
-                            }`}
-                        />
-                      </Button>
-
-
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setShareDialog({
-                            isOpen: true,
-                            outfitId: outfit.id,
-                            outfitTitle: outfit.title,
-                            outfitImage: outfit.image_url
-                          })}>
-                            <Share2 className="mr-2 h-4 w-4" />
-                            {t('community.share')}
-                          </DropdownMenuItem>
-
-                          <DropdownMenuSeparator />
-
-                          <DropdownMenuItem onClick={() => handleOpenReport(outfit.id, outfit.title)} className="text-destructive focus:text-destructive">
-                            <Flag className="mr-2 h-4 w-4" />
-                            {t('community.report')}
-                          </DropdownMenuItem>
-
-                          {user && user.id !== outfit.user_id && (
-                            <DropdownMenuItem
-                              onClick={() => setBlockConfirmDialog({ isOpen: true, userId: outfit.user_id, userName: outfit.profiles?.name || '' })}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <UserMinus className="mr-2 h-4 w-4" />
-                              {t('userProfile.blockUser') || 'Block User'}
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {/* Follow Button - Always visible for other users' posts */}
+                      {user && user.id !== outfit.user_id && (
+                        <Button
+                          variant={outfit.is_following ? "secondary" : "default"}
+                          size="sm"
+                          className="h-8 px-4 text-xs flex-shrink-0 font-semibold min-w-[70px]"
+                          onClick={() => handleFollow(outfit.user_id, outfit.is_following || false)}
+                        >
+                          {outfit.is_following ? '✓ 已追蹤' : '+ 追蹤'}
+                        </Button>
+                      )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+
+                    {/* Title and Description */}
+                    <h3 className="font-semibold mb-2 line-clamp-2">
+                      {outfit.title}
+                    </h3>
+                    {outfit.description && (
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                        {outfit.description}
+                      </p>
+                    )}
+
+                    {/* Tags */}
+                    {outfit.style_tags && outfit.style_tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {outfit.style_tags.slice(0, 3).map((tag) => (
+                          <Badge key={tag} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {outfit.style_tags.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{outfit.style_tags.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex items-center gap-1 p-0 h-auto"
+                          onClick={() => handleLike(outfit.id, outfit.is_liked || false)}
+                        >
+                          <Heart
+                            className={`h-4 w-4 ${outfit.is_liked ? 'fill-red-500 text-red-500' : ''
+                              }`}
+                          />
+                          <span className="text-sm">{outfit.likes_count}</span>
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex items-center gap-1 p-0 h-auto"
+                          onClick={() => handleOpenComments(outfit)}
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          <span className="text-sm">{outfit.comments_count || 0}</span>
+                        </Button>
+
+                        {(() => {
+                          const count = outfit.try_count || 0;
+                          // Heatmap colors
+                          let bgColor, textColor, borderColor;
+                          if (count === 0) {
+                            bgColor = 'from-blue-500/20 to-blue-400/10';
+                            textColor = 'text-blue-400';
+                            borderColor = 'border-blue-400/30';
+                          } else if (count < 5) {
+                            bgColor = 'from-cyan-500/20 to-cyan-400/10';
+                            textColor = 'text-cyan-400';
+                            borderColor = 'border-cyan-400/30';
+                          } else if (count < 10) {
+                            bgColor = 'from-green-500/20 to-green-400/10';
+                            textColor = 'text-green-400';
+                            borderColor = 'border-green-400/30';
+                          } else if (count < 20) {
+                            bgColor = 'from-yellow-500/20 to-yellow-400/10';
+                            textColor = 'text-yellow-400';
+                            borderColor = 'border-yellow-400/30';
+                          } else if (count < 50) {
+                            bgColor = 'from-orange-500/20 to-orange-400/10';
+                            textColor = 'text-orange-400';
+                            borderColor = 'border-orange-400/30';
+                          } else {
+                            bgColor = 'from-red-500/20 to-red-400/10';
+                            textColor = 'text-red-400';
+                            borderColor = 'border-red-400/30';
+                          }
+                          return (
+                            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full bg-gradient-to-r ${bgColor} border ${borderColor} transition-all duration-300`}>
+                              <Shirt className={`h-4 w-4 ${textColor}`} />
+                              <span className={`text-sm font-medium ${textColor}`}>{count}</span>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className={`flex items-center gap-1 px-4 py-1 border-2 font-semibold transition-all duration-200 ${showTryGuide && index === 0
+                              ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_15px_rgba(255,107,53,0.5)] z-20 relative animate-bounce'
+                              : 'border-primary text-primary hover:bg-primary hover:text-primary-foreground'
+                              }`}
+                            onClick={() => handleTryClick(outfit)}
+                            title={t('community.tryTooltip')}
+                          >
+                            {t('community.try')}
+                          </Button>
+
+                          {/* Guide Tooltip */}
+                          {showTryGuide && index === 0 && (
+                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-foreground text-background text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-xl z-30 animate-in fade-in zoom-in duration-300">
+                              {t('community.tryGuide')}
+                              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rotate-45"></div>
+                            </div>
+                          )}
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex items-center gap-1 p-0 h-auto"
+                          onClick={() => handleBookmark(outfit.id, outfit.is_bookmarked || false)}
+                          title={outfit.is_bookmarked ? t('community.unbookmarkTooltip') : t('community.bookmarkTooltip')}
+                        >
+                          <Bookmark
+                            className={`h-4 w-4 ${outfit.is_bookmarked ? 'fill-primary text-primary' : ''
+                              }`}
+                          />
+                        </Button>
+
+
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setShareDialog({
+                              isOpen: true,
+                              outfitId: outfit.id,
+                              outfitTitle: outfit.title,
+                              outfitImage: outfit.image_url
+                            })}>
+                              <Share2 className="mr-2 h-4 w-4" />
+                              {t('community.share')}
+                            </DropdownMenuItem>
+
+                            <DropdownMenuSeparator />
+
+                            <DropdownMenuItem onClick={() => handleOpenReport(outfit.id, outfit.title)} className="text-destructive focus:text-destructive">
+                              <Flag className="mr-2 h-4 w-4" />
+                              {t('community.report')}
+                            </DropdownMenuItem>
+
+                            {user && user.id !== outfit.user_id && (
+                              <DropdownMenuItem
+                                onClick={() => setBlockConfirmDialog({ isOpen: true, userId: outfit.user_id, userName: outfit.profiles?.name || '' })}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <UserMinus className="mr-2 h-4 w-4" />
+                                {t('userProfile.blockUser') || 'Block User'}
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
         )}

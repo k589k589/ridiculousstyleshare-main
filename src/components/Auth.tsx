@@ -231,14 +231,53 @@ const Auth = () => {
     }
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-        }
-      });
+      // Check if we're on native iOS/Android
+      if (Capacitor.isNativePlatform()) {
+        // Use in-app browser for OAuth
+        const { Browser } = await import('@capacitor/browser');
 
-      if (error) throw error;
+        // Get OAuth URL from Supabase
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: 'rssharing://auth/callback',
+            skipBrowserRedirect: true,
+          }
+        });
+
+        if (error) throw error;
+
+        if (data.url) {
+          // Open in-app browser
+          await Browser.open({
+            url: data.url,
+            presentationStyle: 'popover',
+            windowName: '_self',
+          });
+
+          // Listen for the app to come back into focus
+          Browser.addListener('browserFinished', async () => {
+            // Check if user is now authenticated
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+              toast({
+                title: "登入成功！",
+                description: "歡迎回到 StyleShare 社群",
+              });
+            }
+          });
+        }
+      } else {
+        // Web fallback - use normal OAuth redirect
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/`,
+          }
+        });
+
+        if (error) throw error;
+      }
     } catch (error: any) {
       toast({
         title: "Google 登入失敗",
@@ -265,19 +304,24 @@ const Auth = () => {
         // Use native Apple Sign-In
         const SignInWithApple = (await import('@capacitor-community/apple-sign-in')).SignInWithApple;
 
+        // Generate a random nonce for security
+        const rawNonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
         const result = await SignInWithApple.authorize({
           clientId: 'app.lovable.6c6b5a62d63045ac916473df130fc101',
           redirectURI: 'https://ridiculousstyleshare.online',
           scopes: 'email name',
           state: '12345',
-          nonce: 'nonce',
+          nonce: rawNonce,
         });
 
         if (result.response && result.response.identityToken) {
           // Sign in with Supabase using the Apple ID token
+          // IMPORTANT: Pass the same raw nonce that was used in authorize()
           const { error } = await supabase.auth.signInWithIdToken({
             provider: 'apple',
             token: result.response.identityToken,
+            nonce: rawNonce,
           });
 
           if (error) throw error;
