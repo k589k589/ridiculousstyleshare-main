@@ -483,6 +483,7 @@ const translations = {
     'profile.inactive': '未啟用',
     'profile.manageSubscription': '管理訂閱',
     'profile.joinVip': '加入 VIP 俱樂部',
+    'profile.upgradeToVip': '立即升級 ($5/月)',
     'profile.deleteAccount': '刪除帳號',
     'profile.confirmDeleteAccount': '確定要刪除帳號嗎？',
     'profile.deleteAccountWarning': '此操作無法復原。這將永久刪除：',
@@ -999,6 +1000,7 @@ const translations = {
     'profile.inactive': 'Inactive',
     'profile.manageSubscription': 'Manage Subscription',
     'profile.joinVip': 'Join VIP Club',
+    'profile.upgradeToVip': 'Upgrade Now ($5/mo)',
   }
 };
 

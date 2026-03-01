@@ -32,6 +32,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import FloatingBottomNav from "./components/FloatingBottomNav";
 import { WelcomeDialogManager } from "./components/WelcomeDialogManager";
+import SplashScreen from "./components/SplashScreen";
 
 const App = () => {
   useEffect(() => {
@@ -47,6 +48,7 @@ const App = () => {
         <BrowserRouter>
           <AuthProvider>
             <WelcomeDialogManager />
+            <SplashScreen onEnter={() => { }} />
             <div className="min-h-screen flex flex-col">
               <Header />
               <main className="flex-1">

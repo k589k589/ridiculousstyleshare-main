@@ -3,7 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 
 // Product ID - must match App Store Connect
-const VIP_PRODUCT_ID = 'vip_monthly_subscription';
+export const VIP_PRODUCT_ID = 'vip_monthly_subscription';
 
 // Type declarations for cordova-plugin-purchase
 declare global {
@@ -215,7 +215,10 @@ export const useAppleIAP = (): UseAppleIAPReturn => {
             || transaction.transactionReceipt
             || transaction.receipt
             || transaction.nativeData?.appStoreReceipt
-            || transaction.nativeData?.transactionReceipt;
+            || transaction.nativeData?.transactionReceipt
+            || transaction.ios_app_store_receipt
+            || transaction.parentReceipt?.nativeData?.appStoreReceipt
+            || transaction.parentReceipt?.appStoreReceipt; // Just in case
 
         console.log('Initial extracted receiptData:', receiptData ? 'FOUND' : 'NULL');
 
@@ -239,7 +242,10 @@ export const useAppleIAP = (): UseAppleIAPReturn => {
                 try {
                     // @ts-ignore
                     await window.CdvPurchase.store.refresh();
-                    console.log('Refresh call completed.');
+                    console.log('Refresh call completed. Waiting for receipt...');
+
+                    // Wait for the receipt to be updated
+                    await new Promise(resolve => setTimeout(resolve, 2000));
 
                     // @ts-ignore
                     const refreshedReceipt = window.CdvPurchase.store.appStoreReceipt;
@@ -356,14 +362,14 @@ export const useAppleIAP = (): UseAppleIAPReturn => {
             const purchasePromise = new Promise<{ success: boolean; error?: string }>((resolve) => {
                 purchaseResolverRef.current = resolve;
 
-                // Set a timeout to handle cancellation/abandonment (120 seconds to allow for receipt refresh/signin)
+                // Set a timeout to handle cancellation/abandonment (300 seconds to allow for receipt refresh/signin)
                 setTimeout(() => {
                     if (purchaseResolverRef.current) {
-                        console.log('Purchase timed out after 120 seconds');
+                        console.log('Purchase timed out after 300 seconds');
                         purchaseResolverRef.current({ success: false, error: 'Purchase timed out. Please try again.' });
                         purchaseResolverRef.current = null;
                     }
-                }, 120000);
+                }, 300000);
             });
 
             // Initiate the purchase - this opens Apple's purchase dialog

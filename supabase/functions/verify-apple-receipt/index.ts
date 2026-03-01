@@ -128,7 +128,7 @@ serve(async (req) => {
         if (!isActive) {
             return new Response(
                 JSON.stringify({ success: false, error: 'Subscription has expired' }),
-                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
         }
 
@@ -211,7 +211,7 @@ serve(async (req) => {
         return new Response(
             JSON.stringify({ success: false, error: error.message }),
             {
-                status: 500,
+                status: 200,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             }
         );

@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from '@/components/ui/label';
 import BookmarkedOutfits from '@/components/BookmarkedOutfits';
 import OutfitDetailDialog from '@/components/OutfitDetailDialog';
-import { useAppleIAP } from '@/hooks/useAppleIAP';
+import { useAppleIAP, VIP_PRODUCT_ID } from '@/hooks/useAppleIAP';
 import { Capacitor } from '@capacitor/core';
 
 interface UserProfile {
@@ -326,7 +326,7 @@ const Profile = () => {
         }
 
         if (!iapProduct) {
-          toast.error('Product "vip_monthly_subscription" not found. Check App Store Connect.');
+          toast.error(`Product "${VIP_PRODUCT_ID}" not found. Check App Store Connect.`);
           setIsSubscribing(false);
           return;
         }
@@ -676,15 +676,17 @@ const Profile = () => {
                 <div className="shrink-0 w-full md:w-auto flex flex-col gap-4">
                   <Button
                     size="lg"
-                    className="w-full md:w-64 h-14 rounded-xl text-lg font-semibold bg-white text-black hover:bg-gray-100 shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="w-full md:w-64 h-14 rounded-xl text-lg font-semibold bg-amber-500 hover:bg-amber-600 text-black shadow-lg hover:shadow-amber-500/20 transition-all transform hover:scale-105"
                     onClick={handleSubscribe}
                     disabled={isSubscribing}
                   >
-                    {isSubscribing ? t('profile.processing') : (
-                      <>
-                        {t('profile.joinVip')}
-                        <span className="ml-2">→</span>
-                      </>
+                    {isSubscribing ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                        <span>{t('profile.processing')}</span>
+                      </div>
+                    ) : (
+                      t('profile.upgradeToVip') || 'Upgrade Now ($5/mo)'
                     )}
                   </Button>
 

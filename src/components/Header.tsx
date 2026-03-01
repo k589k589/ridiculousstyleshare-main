@@ -4,7 +4,7 @@ import { Menu, X, Globe, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
-import rssLogo from "@/assets/rss-logo-transparent.png";
+import rssLogo from "@/assets/rss_logo_orange_cat.png";
 import { supabase } from '@/lib/supabase';
 import { useToast } from "@/hooks/use-toast";
 
