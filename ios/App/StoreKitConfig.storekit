@@ -92,7 +92,7 @@
               "locale" : "zh_TW"
             }
           ],
-          "productID" : "vip_monthly_subscription",
+          "productID" : "VIP_monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "VIP Monthly",
           "subscriptionGroupID" : "21460989",

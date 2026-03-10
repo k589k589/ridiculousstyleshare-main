@@ -3,7 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 
 // Product ID - must match App Store Connect
-export const VIP_PRODUCT_ID = 'vip_monthly_subscription';
+export const VIP_PRODUCT_ID = 'VIP';
 
 // Type declarations for cordova-plugin-purchase
 declare global {

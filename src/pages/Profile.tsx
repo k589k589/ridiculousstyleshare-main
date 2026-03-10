@@ -316,8 +316,7 @@ const Profile = () => {
     try {
       // Platform check: Native iOS uses Apple IAP
       if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
-        // DEBUG: Show IAP state
-        toast.info(`IAP Debug: isAvailable=${isIapAvailable}, product=${iapProduct ? iapProduct.id : 'null'}, canPurchase=${iapProduct?.canPurchase || 'N/A'}`);
+        console.log('[IAP] Purchase initiated:', { isIapAvailable, product: iapProduct?.id, canPurchase: iapProduct?.canPurchase });
 
         if (!isIapAvailable) {
           toast.error('IAP store not available. Check: 1) IAP capability in Xcode 2) Product in App Store Connect');
